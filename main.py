@@ -1,7 +1,10 @@
 import xlrd
+import sys
+from VisualElement import VisualElement
 from ExcelWriter import ExcelWriter
 from xlutils.copy import copy
 from xlutils.styles import Styles
+from PyQt5.QtWidgets import QApplication
 
 
 # Day constants for finding sheet=day combination
@@ -31,6 +34,14 @@ excelWriter.setYellow(6, 5)
 excelWriter.setPink(5,5)
 
 num = excelWriter.calcHourEmployees(13)
+
+
+### Create Applicatin Window ###
+app = QApplication(sys.argv)
+ex = VisualElement(xlrd.open_workbook(filename='new_schedule.xls', formatting_info=True, on_demand=True), excelWriter.calcNumEmployees())
+sys.exit(app.exec_())
+
+################################
 
 
 
