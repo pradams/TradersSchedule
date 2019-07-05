@@ -38,7 +38,7 @@ num = excelWriter.calcHourEmployees(13)
 
 ### Create Applicatin Window ###
 app = QApplication(sys.argv)
-ex = VisualElement(xlrd.open_workbook(filename='new_schedule.xls', formatting_info=True, on_demand=True), excelWriter.calcNumEmployees())
+ex = VisualElement('new_schedule.xls', excelWriter.calcNumEmployees())
 sys.exit(app.exec_())
 
 ################################
@@ -63,24 +63,6 @@ sys.exit(app.exec_())
 
 
 
-# Might need to preserve cell formatting
-def _getOutCell(outSheet, row_index, col_index):
-    row = outSheet._Worksheet__rows.get(row_index)
-    if not row:
-        return None
-
-    cell = row._Row__cells.get(col_index)
-    return cell
-
-def setOutCell(outSheet, row, col, value):
-    previousCell = _getOutCell(outSheet, col, row)
-
-    outSheet.write(row, col, value)
-
-    if previousCell:
-        newCell = _getOutCell(outSheet, col, row)
-        if newCell:
-            newCell.xf_idx = previousCell.xf_idx
 
 
 

@@ -1,18 +1,27 @@
 from PyQt5.QtWidgets import QMainWindow, QApplication, QHeaderView, QWidget, QAction, QTableWidget, QTableWidgetItem, QVBoxLayout
 from PyQt5.QtGui import QIcon, QBrush, QColor
 from PyQt5.QtCore import pyqtSlot, QSize
-from pynput import keyboard
+import xlrd
+import xlwt
+from xlutils.copy import copy
 
 class VisualElement(QWidget):
 
-    def __init__(self, tempSched, numEmployees):
+    # tempSched is the newSchdule.
+    def __init__(self, new_filename, numEmployees):
         super().__init__()
         self.title = "Trader's Scheduler"
         self.left = 100
         self.top = 100
         self.width = 750
         self.height = 700
-        self.tempSched = tempSched
+
+        # Colors
+        self.pink = (243, 159, 255, 255)
+        self.yellow = (255, 255, 97, 255)
+
+        self.read_schedule = xlrd.open_workbook(filename=new_filename, formatting_info=True, on_demand=True)
+        self.write_schedule = copy(self.read_schedule)
         self.numEmployees = numEmployees
         self.initUI()
 
@@ -36,6 +45,7 @@ class VisualElement(QWidget):
         # Hide the vertical and horizontal indexes.
         self.tableWidget.verticalHeader().setVisible = False
         self.tableWidget.horizontalHeader().setVisible = False
+        self.tableWidget.setSelectionMode(QTableWidget.NoSelection)
 
         head = self.tableWidget.horizontalHeader()
 
@@ -58,32 +68,24 @@ class VisualElement(QWidget):
 
         for row in range(1, self.numEmployees[0]+1):
             cell_item = QTableWidgetItem('')
-            cell_item.setBackground(QColor(243, 159, 255))
+            cell_item.setBackground(QColor(self.pink[0], self.pink[1], self.pink[2]))
             cell_item.setSizeHint(QSize(2,2))
             self.tableWidget.setItem(row, 1, cell_item)
 
-        self.tableWidget.cellEntered.connect(self.enteredCell)
-
-        self.tableWidget.move(0,0)
-
-    def enteredCell(self, row, col):
-        data = self.tableWidget.item(row, col)
-
-        pass
+        self.tableWidget.clicked.connect(self.clickedCell)
 
 
-    '''
-    def on_press(self, key):
-        print('{0} pressed'.format(key))
+    # Handle the cell being clicked.
+    def clickedCell(self, cell):
+        row = cell.row()
+        col = cell.column()
+        clicked_cell = self.tableWidget.item(row, col)
+        current_color = clicked_cell.background().color().getRgb()
+        if current_color == self.pink:
+            clicked_cell.setBackground(QColor(self.yellow[0], self.yellow[1],
+                                                     self.yellow[2]))
+        elif current_color == self.yellow:
+            clicked_cell.setBackground(QColor(self.pink[0], self.pink[1],
+                                              self.pink[2]))
 
-    def on_release(self, key):
-        if key == Key.esc:
-            return False
-
-    listener = keyboard.Listener(
-        on_press=on_press,
-        on_release=on_release)
-    listener.start()
-
-    ''' 
 
