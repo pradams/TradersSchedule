@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QMainWindow, QApplication, QHeaderView, QWidget, QAction, QTableWidget, QTableWidgetItem, QVBoxLayout
-from PyQt5.QtGui import QIcon, QBrush, QColor
+from PyQt5.QtWidgets import QMainWindow, QApplication, QHeaderView, QWidget, QPushButton,QTableWidget, QTableWidgetItem, QVBoxLayout
+from PyQt5.QtGui import QIcon, QBrush, QColor, QPalette
 from PyQt5.QtCore import pyqtSlot, QSize
 import xlrd
 import xlwt
@@ -23,6 +23,7 @@ class VisualElement(QWidget):
         self.read_schedule = xlrd.open_workbook(filename=new_filename, formatting_info=True, on_demand=True)
         self.write_schedule = copy(self.read_schedule)
         self.numEmployees = numEmployees
+        self.updatedRows = set([])
         self.initUI()
 
     def initUI(self):
@@ -43,9 +44,18 @@ class VisualElement(QWidget):
         self.tableWidget.setColumnCount(14)
 
         # Hide the vertical and horizontal indexes.
-        self.tableWidget.verticalHeader().setVisible = False
-        self.tableWidget.horizontalHeader().setVisible = False
+        self.tableWidget.verticalHeader().setVisible(False)
+        self.tableWidget.horizontalHeader().setVisible(False)
         self.tableWidget.setSelectionMode(QTableWidget.NoSelection)
+
+        # Create button
+        save_button = QPushButton(self.tableWidget)
+        save_button.setText("Save Schedule")
+        palette = save_button.palette()
+        palette.setColor(QPalette.Button, QColor('blue'))
+        save_button.setPalette(palette)
+        save_button.update()
+        save_button.clicked.connect(self.save_button_clicked)
 
         head = self.tableWidget.horizontalHeader()
 
@@ -84,8 +94,17 @@ class VisualElement(QWidget):
         if current_color == self.pink:
             clicked_cell.setBackground(QColor(self.yellow[0], self.yellow[1],
                                                      self.yellow[2]))
+            self.updatedRows.add(row)
         elif current_color == self.yellow:
             clicked_cell.setBackground(QColor(self.pink[0], self.pink[1],
                                               self.pink[2]))
+            self.updatedRows.add(row)
+
+
+    # Handle situation where save button is clicked.
+    # Should update the new schedule with edited cell colors.
+    def save_button_clicked(self):
+        print("Button Pressed")
+
 
 
