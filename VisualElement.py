@@ -1,11 +1,12 @@
-from PyQt5.QtWidgets import QMainWindow, QApplication, QHeaderView, QWidget, QPushButton,QTableWidget, QTableWidgetItem, QVBoxLayout
+from PyQt5.QtWidgets import QMainWindow, QApplication, QHeaderView, QWidget, QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout, QFileDialog
 from PyQt5.QtGui import QIcon, QBrush, QColor, QPalette
 from PyQt5.QtCore import pyqtSlot, QSize
 import xlrd
 import xlwt
+import tkfilebrowser
 from xlutils.copy import copy
 
-class VisualElement(QWidget):
+class VisualTable(QWidget):
 
     # tempSched is the newSchdule.
     def __init__(self, new_filename, numEmployees):
@@ -31,7 +32,6 @@ class VisualElement(QWidget):
         self.setGeometry(self.left, self.top, self.width, self.height)
         self.tableWidget = QTableWidget()
         self.tableWidget.setMouseTracking(True)
-        self.createTable()
 
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.tableWidget)
@@ -87,24 +87,48 @@ class VisualElement(QWidget):
 
     # Handle the cell being clicked.
     def clickedCell(self, cell):
-        row = cell.row()
-        col = cell.column()
-        clicked_cell = self.tableWidget.item(row, col)
-        current_color = clicked_cell.background().color().getRgb()
-        if current_color == self.pink:
-            clicked_cell.setBackground(QColor(self.yellow[0], self.yellow[1],
+        try:
+            row = cell.row()
+            col = cell.column()
+            clicked_cell = self.tableWidget.item(row, col)
+            current_color = clicked_cell.background().color().getRgb()
+            if current_color == self.pink:
+                clicked_cell.setBackground(QColor(self.yellow[0], self.yellow[1],
                                                      self.yellow[2]))
-            self.updatedRows.add(row)
-        elif current_color == self.yellow:
-            clicked_cell.setBackground(QColor(self.pink[0], self.pink[1],
+                self.updatedRows.add(row)
+            elif current_color == self.yellow:
+                clicked_cell.setBackground(QColor(self.pink[0], self.pink[1],
                                               self.pink[2]))
-            self.updatedRows.add(row)
+                self.updatedRows.add(row)
+        except:
+            print("Blank cell chosen. No Color Change.")
+            pass
 
 
     # Handle situation where save button is clicked.
     # Should update the new schedule with edited cell colors.
     def save_button_clicked(self):
         print("Button Pressed")
+
+
+class FileBrowser(QWidget):
+
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+
+    def initUI(self):
+        self.setWindowTitle("Trader's Scheduler: File Browser")
+        self.setGeometry(30, 30, 700, 500)
+
+    def openFileBrowser(self):
+        options =QFileDialog.options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getOpenFileName(self, "Choose a schedule", "", "All Files (*)", options=options)
+
+
+
+
 
 
 
