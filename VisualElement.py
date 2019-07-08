@@ -1,9 +1,8 @@
-from PyQt5.QtWidgets import QMainWindow, QApplication, QHeaderView, QWidget, QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout, QFileDialog
+from PyQt5.QtWidgets import QMainWindow, QApplication, QHeaderView, QLabel, QWidget, QPushButton, QTableWidget, QTableWidgetItem, QGridLayout, QVBoxLayout, QComboBox, QFileDialog
 from PyQt5.QtGui import QIcon, QBrush, QColor, QPalette
-from PyQt5.QtCore import pyqtSlot, QSize
+from PyQt5.QtCore import pyqtSlot, QSize, QStringListModel
 import xlrd
 import xlwt
-import tkfilebrowser
 from xlutils.copy import copy
 
 class VisualTable(QWidget):
@@ -111,7 +110,7 @@ class VisualTable(QWidget):
         print("Button Pressed")
 
 
-class FileBrowser(QWidget):
+class MainIntroWindow(QWidget):
 
     def __init__(self):
         super().__init__()
@@ -119,12 +118,33 @@ class FileBrowser(QWidget):
 
     def initUI(self):
         self.setWindowTitle("Trader's Scheduler: File Browser")
-        self.setGeometry(30, 30, 700, 500)
+        self.setGeometry(30, 30, 300, 300)
+
+        self.layout = QGridLayout(self)
+
+        # Initialize all widgets
+        self.day_selector = QComboBox()
+        self.day_selector.addItems(["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",
+                                    "Friday", "Saturday", "All"])
+        self.choose_day_label = QLabel("Choose Day: ")
+        self.open_file_button = QPushButton("Open Previous Schedule")
+        self.open_file_button.clicked.connect(self.openFileBrowser)
+
+        self.layout.addWidget(self.choose_day_label, 0, 0)
+        self.layout.addWidget(self.day_selector, 0, 1)
+        self.layout.addWidget(self.open_file_button, 1, 0)
+
+        self.setLayout(self.layout)
+        self.show()
 
     def openFileBrowser(self):
-        options =QFileDialog.options()
-        options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getOpenFileName(self, "Choose a schedule", "", "All Files (*)", options=options)
+        file_dialog = QFileDialog()
+        file_dialog.move(200, 200)
+        options = file_dialog.Options()
+        options |= file_dialog.DontUseNativeDialog
+
+        fileName, _ = file_dialog.getOpenFileName(self, "Choose a schedule", "", "All Files (*)", options=options)
+        return fileName
 
 
 
