@@ -16,12 +16,18 @@ class ExcelWriter:
         self.employees = self.calcNumEmployees()[1]
         self.styles = styles
         self.open_hour = curr_sheet.cell(1, 5).value
+        self.shift_indexes = {}
 
     def calcBreakTimes(self):
         for i in range(2, self.num_employees+2):
             # Calculating actual times since cell times given in percentage of a 24 hour day.
             start_time = self.curr_sheet.cell(i, 1).value * 24
             end_time = self.curr_sheet.cell(i, 2).value * 24
+
+            # Keep track of indexes for each shift time.
+            if not self.shift_indexes.get(start_time):
+                self.shift_indexes[start_time] = []
+            self.shift_indexes[start_time].append(i)
 
             first_break = round(start_time) + 2
             second_break = round(end_time) - 2
@@ -42,23 +48,28 @@ class ExcelWriter:
 
 
     def calcLunchTimes(self):
-        for i in range(2, self.num_employees+2):
-            start_time = self.curr_sheet.cell(i, 1).value * 24
+        open_info = (round(self.open_hour), 5)
+        for time in self.shift_indexes:
+            temp_count = 0
+            shift_count_midpoint = round(len(self.shift_indexes[time]) / 2)
+            print("Midpoint: ", shift_count_midpoint)
+            for index in self.shift_indexes[time]:
+                # Lunch time starts 4 hours after start. Create base data that connects an 8oclock lunch to index 5.
+                lunch_time = round(time) + 4
 
-            # Lunch time starts 4 hours after start. Create base data that connects an 8oclock lunch to index 5.
-            lunch_time = round(start_time) + 4
-            open_info = (round(self.open_hour), 5)
+                # Use base data to calculate the index for lunch time.
+                lunch_index = open_info[1] + (lunch_time - open_info[0]) * 2
+                if temp_count >= shift_count_midpoint:
+                    print("midpoint")
+                    lunch_index += 1
 
-            # Use base data to calculate the index for lunch time.
-            lunch_index = open_info[1] + (lunch_time - open_info[0]) * 2
-
-            # Make sure cell border styling is correct according to where in hour lunch will occur.
-            if lunch_index % 2:
-                style = xlwt.easyxf('borders: left thin, top thin, bottom thin')
-            else:
-                style = xlwt.easyxf('borders: right thin, top thin, bottom thin')
-            self.new_sheet.write(i, lunch_index, 'L', style)
-
+                # Make sure cell border styling is correct according to where in hour lunch will occur.
+                if lunch_index % 2:
+                    style = xlwt.easyxf('borders: left thin, top thin, bottom thin')
+                else:
+                    style = xlwt.easyxf('borders: right thin, top thin, bottom thin')
+                self.new_sheet.write(index, lunch_index, 'L', style)
+                temp_count += 1
         self.new_book.save('new_schedule.xls')
 
 
