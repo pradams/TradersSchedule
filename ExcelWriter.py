@@ -15,8 +15,13 @@ class ExcelWriter:
         self.num_employees = self.calcNumEmployees()[0]
         self.employees = self.calcNumEmployees()[1]
         self.styles = styles
-        self.open_hour = curr_sheet.cell(1, 5).value
+        self.open_hour = (curr_sheet.cell(1, 5).value, 5)
         self.shift_indexes = {}
+        self.hour_shift_indexes = {}
+
+    def translateHourToCell(self, time):
+        hour_index = self.open_hour[1] + (round(time) - self.open_hour[0]) * 2
+        return hour_index
 
     def calcBreakTimes(self):
         for i in range(2, self.num_employees+2):
@@ -48,19 +53,16 @@ class ExcelWriter:
 
 
     def calcLunchTimes(self):
-        open_info = (round(self.open_hour), 5)
         for time in self.shift_indexes:
             temp_count = 0
             shift_count_midpoint = round(len(self.shift_indexes[time]) / 2)
-            print("Midpoint: ", shift_count_midpoint)
             for index in self.shift_indexes[time]:
                 # Lunch time starts 4 hours after start. Create base data that connects an 8oclock lunch to index 5.
                 lunch_time = round(time) + 4
 
                 # Use base data to calculate the index for lunch time.
-                lunch_index = open_info[1] + (lunch_time - open_info[0]) * 2
+                lunch_index = self.open_hour[1] + (lunch_time - self.open_hour[0]) * 2
                 if temp_count >= shift_count_midpoint:
-                    print("midpoint")
                     lunch_index += 1
 
                 # Make sure cell border styling is correct according to where in hour lunch will occur.
@@ -68,7 +70,7 @@ class ExcelWriter:
                     style = xlwt.easyxf('borders: left thin, top thin, bottom thin')
                 else:
                     style = xlwt.easyxf('borders: right thin, top thin, bottom thin')
-                self.new_sheet.write(index, lunch_index, 'L', style)
+                self.new_sheet.write(index, int(lunch_index), 'L', style)
                 temp_count += 1
         self.new_book.save('new_schedule.xls')
 
@@ -90,7 +92,7 @@ class ExcelWriter:
         self.new_sheet.write(row, col, '', style)
         style = xlwt.easyxf('pattern: pattern solid, fore_colour light_yellow; borders: right thin, top thin, bottom thin;')
         self.new_sheet.write(row, col+1, '', style)
-        self.new_book.save('new_schedule.xls')
+        #self.new_book.save('new_schedule.xls')
 
     # Set cell to pink.
     def setPink(self, row, col):
@@ -98,14 +100,14 @@ class ExcelWriter:
         self.new_sheet.write(row, col, '', style)
         style = xlwt.easyxf('pattern: pattern solid, fore_colour rose; borders: right thin, top thin, bottom thin;')
         self.new_sheet.write(row, col + 1, '', style)
-        self.new_book.save('new_schedule.xls')
+        #self.new_book.save('new_schedule.xls')
 
     # Function returns list of employees working on specific hour. Hour should be in military time.
     def calcHourEmployees(self, hour):
         employees = []
 
         # open_info is a tuple with the first hour the store is open(first hour on log), and the index of the first hour.
-        open_info = (round(self.open_hour), 5)
+        open_info = (int(self.open_hour[0]), 5)
         for i in range(2, self.num_employees):
             name = self.curr_sheet.cell(i, 0)
 
@@ -117,7 +119,31 @@ class ExcelWriter:
             # Checks if colour is not gray.
             if (name.value != '') and (colour_index != 22):
                 employees.append(name.value)
+
+                # Add index to dict for use in coloring the cells.
+                if not self.hour_shift_indexes.get(hour):
+                    self.hour_shift_indexes[hour] = []
+                self.hour_shift_indexes[hour].append(i)
         return employees
+
+    # Runs calcHourEmployees for each hour open to set up dict to be used for coloring cells.
+    def setHourIndexes(self):
+        for i in range(8, 21):
+            self.calcHourEmployees(i)
+
+    # Function sets up the schedule for the day, coloring the cells accordingly.
+    def colorCells(self):
+        self.setHourIndexes()
+
+        # Should go up to index 28
+        for i in range(8, 9):
+            col = self.translateHourToCell(i)
+            for row in self.hour_shift_indexes[i]:
+                self.setYellow(row, col)
+        self.new_book.save('new_schedule.xls')
+
+
+
 
 
 

@@ -17,8 +17,9 @@ class VisualTable(QWidget):
         self.height = 700
 
         # Colors
-        self.pink = (243, 159, 255, 255)
-        self.yellow = (255, 255, 97, 255)
+        self.pink = (255, 153, 204, 255)
+        self.yellow = (255, 255, 153, 255)
+        self.grey = (192, 192, 192, 255)
 
         self.read_schedule = xlrd.open_workbook(filename=new_filename, formatting_info=True, on_demand=True)
         self.write_schedule = copy(self.read_schedule)
@@ -75,13 +76,43 @@ class VisualTable(QWidget):
         # Resize cell to length of name.
         head.setSectionResizeMode(0, QHeaderView.ResizeToContents)
 
+        self.copyCellColors(self.read_schedule.get_sheet(4))
+        '''
         for row in range(1, self.numEmployees[0]+1):
             cell_item = QTableWidgetItem('')
             cell_item.setBackground(QColor(self.pink[0], self.pink[1], self.pink[2]))
             cell_item.setSizeHint(QSize(2,2))
             self.tableWidget.setItem(row, 1, cell_item)
-
+        '''
         self.tableWidget.clicked.connect(self.clickedCell)
+
+
+    def copyCellColors(self, new_sheet):
+
+        # Colour indexes ----- Pink: 45    Yellow: 43
+        col = 1
+        for i in range(5, 30, 2):
+            for row in range(2, self.numEmployees[0] + 2):
+                # Extracting style information to obtain background colour of cell.
+                xf = new_sheet.cell_xf_index(row, i)
+                xf_next = self.read_schedule.xf_list[xf]
+                colour_index = xf_next.background.pattern_colour_index
+
+                cell_item = QTableWidgetItem('')
+                cell_item.setSizeHint(QSize(2, 2))
+
+                if colour_index == 45:
+                    cell_item.setBackground(QColor(self.pink[0], self.pink[1], self.pink[2]))
+                    print("Setting Pink")
+                elif colour_index == 43:
+                    cell_item.setBackground(QColor(self.yellow[0], self.yellow[1], self.yellow[2]))
+                    print("Setting Yellow")
+                elif colour_index == 22:
+                    cell_item.setBackground(QColor(self.grey[0], self.grey[1], self.grey[2]))
+                    print("Setting Grey")
+
+                self.tableWidget.setItem(row-1, col, cell_item)
+            col += 1
 
 
     # Handle the cell being clicked.

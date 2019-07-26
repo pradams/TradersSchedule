@@ -37,8 +37,9 @@ excelWriter.calcBreakTimes()
 
 # Set Lunch Times.
 excelWriter.calcLunchTimes()
-excelWriter.setYellow(6, 5)
-excelWriter.setPink(5,5)
+excelWriter.setYellow(5,5)
+excelWriter.colorCells()
+
 
 # Create editing table.
 ex = VisualTable('new_schedule.xls', excelWriter.calcNumEmployees())
