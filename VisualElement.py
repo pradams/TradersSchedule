@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QMainWindow, QApplication, QHeaderView, QLabel, QWidget, QPushButton, QTableWidget, QTableWidgetItem, QGridLayout, QVBoxLayout, QComboBox, QFileDialog
-from PyQt5.QtGui import QIcon, QBrush, QColor, QPalette
-from PyQt5.QtCore import pyqtSlot, QSize, QStringListModel, Qt
+from PyQt5.QtWidgets import QHeaderView, QLabel, QWidget, QPushButton, QTableWidget, QTableWidgetItem, QGridLayout, QVBoxLayout, QComboBox, QFileDialog
+from PyQt5.QtGui import QColor, QPalette
+from PyQt5.QtCore import QSize, Qt
 import xlrd
 import xlwt
 from xlutils.copy import copy

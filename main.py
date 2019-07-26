@@ -5,7 +5,7 @@ from VisualElement import MainIntroWindow
 from ExcelWriter import ExcelWriter
 from xlutils.copy import copy
 from xlutils.styles import Styles
-from PyQt5.QtWidgets import QApplication, QFileDialog
+from PyQt5.QtWidgets import QApplication
 
 ### Create Applicatin Window ###
 app = QApplication(sys.argv)
