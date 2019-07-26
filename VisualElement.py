@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QMainWindow, QApplication, QHeaderView, QLabel, QWidget, QPushButton, QTableWidget, QTableWidgetItem, QGridLayout, QVBoxLayout, QComboBox, QFileDialog
 from PyQt5.QtGui import QIcon, QBrush, QColor, QPalette
-from PyQt5.QtCore import pyqtSlot, QSize, QStringListModel
+from PyQt5.QtCore import pyqtSlot, QSize, QStringListModel, Qt
 import xlrd
 import xlwt
 from xlutils.copy import copy
@@ -23,6 +23,7 @@ class VisualTable(QWidget):
 
         self.read_schedule = xlrd.open_workbook(filename=new_filename, formatting_info=True, on_demand=True)
         self.write_schedule = copy(self.read_schedule)
+        self.numberOfCE = [0] * 13
         self.numEmployees = numEmployees
         self.updatedRows = set([])
         self.initUI()
@@ -48,6 +49,9 @@ class VisualTable(QWidget):
         self.tableWidget.horizontalHeader().setVisible(False)
         self.tableWidget.setSelectionMode(QTableWidget.NoSelection)
 
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+
         # Create button
         save_button = QPushButton(self.tableWidget)
         save_button.setText("Save Schedule")
@@ -56,6 +60,14 @@ class VisualTable(QWidget):
         save_button.setPalette(palette)
         save_button.update()
         save_button.clicked.connect(self.save_button_clicked)
+
+        layout.addWidget(save_button)
+        layout.setAlignment(Qt.AlignCenter)
+        layout.setContentsMargins(0, 0, 0, 0)
+        widget.setLayout(layout)
+        self.tableWidget.setCellWidget(0, 0, widget)
+
+
 
         head = self.tableWidget.horizontalHeader()
 
@@ -77,13 +89,6 @@ class VisualTable(QWidget):
         head.setSectionResizeMode(0, QHeaderView.ResizeToContents)
 
         self.copyCellColors(self.read_schedule.get_sheet(4))
-        '''
-        for row in range(1, self.numEmployees[0]+1):
-            cell_item = QTableWidgetItem('')
-            cell_item.setBackground(QColor(self.pink[0], self.pink[1], self.pink[2]))
-            cell_item.setSizeHint(QSize(2,2))
-            self.tableWidget.setItem(row, 1, cell_item)
-        '''
         self.tableWidget.clicked.connect(self.clickedCell)
 
 
@@ -91,6 +96,8 @@ class VisualTable(QWidget):
 
         # Colour indexes ----- Pink: 45    Yellow: 43
         col = 1
+
+        # Iterate over every cell, col first, row second.
         for i in range(5, 30, 2):
             for row in range(2, self.numEmployees[0] + 2):
                 # Extracting style information to obtain background colour of cell.
@@ -101,11 +108,13 @@ class VisualTable(QWidget):
                 cell_item = QTableWidgetItem('')
                 cell_item.setSizeHint(QSize(2, 2))
 
+                # Set the table cell the same color as the excel cell.
                 if colour_index == 45:
                     cell_item.setBackground(QColor(self.pink[0], self.pink[1], self.pink[2]))
                     print("Setting Pink")
                 elif colour_index == 43:
                     cell_item.setBackground(QColor(self.yellow[0], self.yellow[1], self.yellow[2]))
+                    self.numberOfCE[col-1] += 1
                     print("Setting Yellow")
                 elif colour_index == 22:
                     cell_item.setBackground(QColor(self.grey[0], self.grey[1], self.grey[2]))
@@ -113,7 +122,17 @@ class VisualTable(QWidget):
 
                 self.tableWidget.setItem(row-1, col, cell_item)
             col += 1
+            print(self.numberOfCE)
 
+
+    def saveToExcel(self, write_sheet):
+        for index in self.updatedRows:
+            cell_color = self.tableWidget.item(index[0], index[1]).background().color().getRgb()
+
+            if cell_color == self.pink:
+                self.setPink(index, write_sheet)
+            else:
+                self.setYellow(index, write_sheet)
 
     # Handle the cell being clicked.
     def clickedCell(self, cell):
@@ -125,19 +144,47 @@ class VisualTable(QWidget):
             if current_color == self.pink:
                 clicked_cell.setBackground(QColor(self.yellow[0], self.yellow[1],
                                                      self.yellow[2]))
-                self.updatedRows.add(row)
+                self.updatedRows.add((row, col))
+                self.numberOfCE[col-1] += 1
+                print(self.updatedRows)
             elif current_color == self.yellow:
                 clicked_cell.setBackground(QColor(self.pink[0], self.pink[1],
                                               self.pink[2]))
-                self.updatedRows.add(row)
-        except:
-            print("Blank cell chosen. No Color Change.")
+                self.updatedRows.add((row, col))
+                self.numberOfCE[col-1] -= 1
+                print(self.updatedRows)
+        except Exception as e:
+            print(e)
             pass
+
+    # Set cell to yellow.
+    def setYellow(self, index, write_sheet):
+        style = xlwt.easyxf(
+            'pattern: pattern solid, fore_colour light_yellow; borders: left thin, top thin, bottom thin;')
+        write_sheet.write(index[0] + 1, (index[1] * 2) + 3, '', style)
+        style = xlwt.easyxf(
+            'pattern: pattern solid, fore_colour light_yellow; borders: right thin, top thin, bottom thin;')
+        write_sheet.write(index[0] + 1, (index[1] * 2) + 4, '', style)
+        # self.new_book.save('new_schedule.xls')
+
+    # Set cell to pink.
+    def setPink(self, index, write_sheet):
+        style = xlwt.easyxf(
+            'pattern: pattern solid, fore_colour rose; borders: left thin, top thin, bottom thin;')
+        write_sheet.write(index[0] + 1, (index[1] * 2) + 3, '', style)
+        style = xlwt.easyxf(
+            'pattern: pattern solid, fore_colour rose; borders: right thin, top thin, bottom thin;')
+        write_sheet.write(index[0] + 1, (index[1] * 2) + 4, '', style)
+        # self.new_book.save('new_schedule.xls')
 
 
     # Handle situation where save button is clicked.
     # Should update the new schedule with edited cell colors.
     def save_button_clicked(self):
+        write_sheet = self.write_schedule.get_sheet(4)
+        self.saveToExcel(write_sheet)
+        self.write_schedule.save("new_schedule.xls")
+
         print("Button Pressed")
 
 
