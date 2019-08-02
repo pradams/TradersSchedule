@@ -7,7 +7,7 @@ class ExcelWriter:
 
     # new_book = New excel that will represent filled out schedule.
     # orig_book = The original excel file that all entries were copied from.
-    def __init__(self, book, new_sheet, curr_sheet, new_book, styles):
+    def __init__(self, book, new_sheet, curr_sheet, new_book, styles, save_file_name):
         self.book = book
         self.new_sheet = new_sheet
         self.curr_sheet = curr_sheet
@@ -18,6 +18,7 @@ class ExcelWriter:
         self.open_hour = (curr_sheet.cell(1, 5).value, 5)
         self.shift_indexes = {}
         self.hour_shift_indexes = {}
+        self.save_file_name = save_file_name
 
     def translateHourToCell(self, time):
         hour_index = self.open_hour[1] + (round(time) - self.open_hour[0]) * 2
@@ -49,7 +50,7 @@ class ExcelWriter:
             self.new_sheet.write(i, 3, first_break, style)
             self.new_sheet.write(i, 4, second_break, style)
 
-        self.new_book.save('new_schedule.xls')
+        self.new_book.save(self.save_file_name)
 
 
     def calcLunchTimes(self):
@@ -72,7 +73,7 @@ class ExcelWriter:
                     style = xlwt.easyxf('borders: right thin, top thin, bottom thin')
                 self.new_sheet.write(index, int(lunch_index), 'L', style)
                 temp_count += 1
-        self.new_book.save('new_schedule.xls')
+        self.new_book.save(self.save_file_name)
 
 
     # Creates list of employees. Returns number of employees and list of employees working that day.
@@ -140,7 +141,7 @@ class ExcelWriter:
             col = self.translateHourToCell(i)
             for row in self.hour_shift_indexes[i]:
                 self.setYellow(row, col)
-        self.new_book.save('new_schedule.xls')
+        self.new_book.save(self.save_file_name)
 
 
 
