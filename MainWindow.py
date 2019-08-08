@@ -14,10 +14,11 @@ class MainIntroWindow(QDialog):
         self.new_save_filename = ''
         self.open_file_found = False
         self.save_file_found = False
+        self.day_index = 0
         self.setupUi(self)
 
     def setupUi(self, Dialog):
-        Dialog.setObjectName("Dialog")
+        self.setWindowTitle("Trader's Scheduler")
         Dialog.resize(574, 270)
         self.day_selector = QComboBox(Dialog)
         self.day_selector.setGeometry(QRect(250, 80, 121, 26))
@@ -57,7 +58,6 @@ class MainIntroWindow(QDialog):
 
     def retranslateUi(self, Dialog):
         _translate = QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
         self.label.setText(_translate("Dialog", "Select a Day:"))
         self.open_file_button.setText(_translate("Dialog", "Choose Original Filename:"))
         self.set_save_file_button.setText(_translate("Dialog", "Choose New Filename:"))
@@ -127,9 +127,6 @@ class MainIntroWindow(QDialog):
             self.run_program_button.setDisabled(False)
         else:
             self.run_program_button.setDisabled(True)
-
-
-
 
     def handleDayIndexChanged(self, index):
         self.day_index = index

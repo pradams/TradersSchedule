@@ -42,7 +42,7 @@ class ExcelWriter:
                 first_break -= 12
             if second_break < 0:
                 second_break += 12
-            elif (second_break > 12):
+            elif second_break > 12:
                 second_break -= 12
 
             # Write calculated break times to new excel file.
@@ -68,9 +68,9 @@ class ExcelWriter:
 
                 # Make sure cell border styling is correct according to where in hour lunch will occur.
                 if lunch_index % 2:
-                    style = xlwt.easyxf('borders: left thin, top thin, bottom thin')
+                    style = xlwt.easyxf('borders: left thin, right thin, top thin, bottom thin')
                 else:
-                    style = xlwt.easyxf('borders: right thin, top thin, bottom thin')
+                    style = xlwt.easyxf('borders: left thin, right thin, top thin, bottom thin')
                 self.new_sheet.write(index, int(lunch_index), 'L', style)
                 temp_count += 1
         self.new_book.save(self.save_file_name)
@@ -82,26 +82,30 @@ class ExcelWriter:
         for i in range(2, self.curr_sheet.nrows):
             name = self.curr_sheet.cell(i, 0)
             # Check if cell type not equal to 0 (0 represents empty).
-            if (name.value != ''):
+            if name.value != '':
                 employees.append(name.value)
         return len(employees), employees
 
 
     # Set cell to yellow.
     def setYellow(self, row, col):
+        print("Row: ", row)
+        print("Col: ", col)
+        left_value = self.curr_sheet.cell(row, int(col)).value
+        right_value = self.curr_sheet.cell(row, int(col + 1)).value
         style = xlwt.easyxf('pattern: pattern solid, fore_colour light_yellow; borders: left thin, top thin, bottom thin;')
-        self.new_sheet.write(row, col, '', style)
+        self.new_sheet.write(row, int(col), left_value, style)
         style = xlwt.easyxf('pattern: pattern solid, fore_colour light_yellow; borders: right thin, top thin, bottom thin;')
-        self.new_sheet.write(row, col+1, '', style)
-        #self.new_book.save('new_schedule.xls')
+        self.new_sheet.write(row, int(col+1), right_value, style)
 
     # Set cell to pink.
     def setPink(self, row, col):
+        left_value = self.curr_sheet.cell(row, int(col)).value
+        right_value = self.curr_sheet.cell(row, int(col+1)).value
         style = xlwt.easyxf('pattern: pattern solid, fore_colour rose; borders: left thin, top thin, bottom thin;')
-        self.new_sheet.write(row, col, '', style)
+        self.new_sheet.write(row, int(col), left_value, style)
         style = xlwt.easyxf('pattern: pattern solid, fore_colour rose; borders: right thin, top thin, bottom thin;')
-        self.new_sheet.write(row, col + 1, '', style)
-        #self.new_book.save('new_schedule.xls')
+        self.new_sheet.write(row, int(col + 1), right_value, style)
 
     # Function returns list of employees working on specific hour. Hour should be in military time.
     def calcHourEmployees(self, hour):
@@ -140,6 +144,7 @@ class ExcelWriter:
         for i in range(8, 9):
             col = self.translateHourToCell(i)
             for row in self.hour_shift_indexes[i]:
+                print("Test: ", row)
                 self.setYellow(row, col)
         self.new_book.save(self.save_file_name)
 

@@ -35,6 +35,7 @@ class VisualTable(QDialog):
         self.numEmployees = numEmployees
         self.updatedRows = set([])
         self.save_file_name = new_filename
+        self.day_index = day_index
         self.initUI()
 
     def initUI(self):
@@ -216,29 +217,33 @@ class VisualTable(QDialog):
 
     # Set cell to yellow.
     def setYellow(self, index, write_sheet):
+        left_value = self.new_sheet.cell(index[0], (index[1] * 2) + 3).value
+        right_value = self.new_sheet.cell(index[0], (index[1] * 2) + 4).value
         style = xlwt.easyxf(
             'pattern: pattern solid, fore_colour light_yellow; borders: left thin, top thin, bottom thin;')
-        write_sheet.write(index[0] + 1, (index[1] * 2) + 3, '', style)
+        write_sheet.write(index[0], (index[1] * 2) + 3, left_value, style)
         style = xlwt.easyxf(
             'pattern: pattern solid, fore_colour light_yellow; borders: right thin, top thin, bottom thin;')
-        write_sheet.write(index[0] + 1, (index[1] * 2) + 4, '', style)
+        write_sheet.write(index[0], (index[1] * 2) + 4, right_value, style)
         # self.new_book.save('new_schedule.xls')
 
     # Set cell to pink.
     def setPink(self, index, write_sheet):
+        left_value = self.new_sheet.cell(index[0], (index[1] * 2) + 3).value
+        right_value = self.new_sheet.cell(index[0], (index[1] * 2) + 4).value
         style = xlwt.easyxf(
             'pattern: pattern solid, fore_colour rose; borders: left thin, top thin, bottom thin;')
-        write_sheet.write(index[0] + 1, (index[1] * 2) + 3, '', style)
+        write_sheet.write(index[0], (index[1] * 2) + 3, left_value, style)
         style = xlwt.easyxf(
             'pattern: pattern solid, fore_colour rose; borders: right thin, top thin, bottom thin;')
-        write_sheet.write(index[0] + 1, (index[1] * 2) + 4, '', style)
+        write_sheet.write(index[0], (index[1] * 2) + 4, right_value, style)
         # self.new_book.save('new_schedule.xls')
 
 
     # Handle situation where save button is clicked.
     # Should update the new schedule with edited cell colors.
     def save_button_clicked(self):
-        write_sheet = self.write_schedule.get_sheet(4)
+        write_sheet = self.write_schedule.get_sheet(self.day_index+3)
         self.saveToExcel(write_sheet)
         self.write_schedule.save(self.save_file_name)
         print("Button Pressed")

@@ -1,10 +1,5 @@
-import xlrd
 import sys
-from VisualElement import VisualTable
 from MainWindow import MainIntroWindow
-from ExcelWriter import ExcelWriter
-from xlutils.copy import copy
-from xlutils.styles import Styles
 from PyQt5.QtWidgets import QApplication
 
 
@@ -15,8 +10,7 @@ app = QApplication(sys.argv)
 browser = MainIntroWindow()
 
 # Close application.
-app.exec()
-#sys.exit(app.exec_())
+sys.exit(app.exec_())
 
 
 
