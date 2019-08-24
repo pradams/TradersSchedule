@@ -1,7 +1,9 @@
-from PyQt5.QtWidgets import QHeaderView, QLabel, QDialog, QWidget, QPushButton, QMainWindow, QTableWidget, QTableWidgetItem, QGridLayout, QVBoxLayout, QComboBox, QFileDialog
+from PyQt5.QtWidgets import QHeaderView, QLabel, QDialog, QWidget, QPushButton, QMainWindow, QAbstractItemView, QTableWidget, QTableWidgetItem, QGridLayout, QVBoxLayout, QComboBox, QFileDialog
 from PyQt5.QtGui import QColor, QPalette, QFont
-from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtCore import QSize, Qt, QTimer
 import datetime
+import keyboard
+from time import sleep
 from ExcelWriter import ExcelWriter
 from xlutils.copy import copy
 from xlutils.styles import Styles
@@ -27,6 +29,15 @@ class VisualTable(QDialog):
         self.yellow = (255, 255, 153, 255)
         self.grey = (192, 192, 192, 255)
         self.white = (0, 0, 0, 255)
+        self.green = (153, 255, 153, 255)
+
+        # Variables used for click handling (single vs double click)
+        self.clock = QTimer()
+        self.clock.setInterval(200)
+        self.clock.setSingleShot(True)
+        self.numberOfClicks = 0
+        self.clock.timeout.connect(self.handleClicks)
+        self.cellClicked = 0
 
         self.read_schedule = xlrd.open_workbook(filename=new_filename, formatting_info=True, on_demand=True)
         self.write_schedule = copy(self.read_schedule)
@@ -55,6 +66,7 @@ class VisualTable(QDialog):
         # Settings for main table with employees
         self.tableWidget.setRowCount(self.numEmployees[0]+2)
         self.tableWidget.setColumnCount(14)
+        self.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         # Hide the vertical and horizontal indexes.
         self.tableWidget.verticalHeader().setVisible(False)
@@ -115,6 +127,7 @@ class VisualTable(QDialog):
         # Copy all the cell colors from the edited excel file. Also, connect save button to action.
         self.copyCellColors()
         self.tableWidget.clicked.connect(self.clickedCell)
+        #self.tableWidget.doubleClicked.connect(self.handleDoubleClick)
 
         # Set CE Count row a different color than the rest, and connect to numbers stored (self.numOfCE)
         for col in range(0, self.tableWidget.columnCount()):
@@ -180,29 +193,54 @@ class VisualTable(QDialog):
             else:
                 self.setYellow(index, write_sheet)
 
-    # Handle the cell being clicked.
     def clickedCell(self, cell):
+        self.numberOfClicks += 1
+        self.cellClicked = cell
+        if not self.clock.isActive():
+            self.clock.start()
+
+    # Handle the cell being clicked.
+    def handleClicks(self):
         try:
-            row = cell.row()
-            col = cell.column()
+            row = self.cellClicked.row()
+            col = self.cellClicked.column()
             clicked_cell = self.tableWidget.item(row, col)
             current_color = clicked_cell.background().color().getRgb()
-            if current_color == self.pink:
-                clicked_cell.setBackground(QColor(self.yellow[0], self.yellow[1],
-                                                     self.yellow[2]))
-                self.updatedRows.add((row, col))
-                self.numberOfCE[col-1] += 1
-            elif current_color == self.yellow:
-                clicked_cell.setBackground(QColor(self.pink[0], self.pink[1],
-                                              self.pink[2]))
-                self.updatedRows.add((row, col))
-                self.numberOfCE[col-1] -= 1
-            elif current_color == self.white:
-                clicked_cell.setBackground(QColor(self.pink[0], self.pink[1],
-                                                  self.pink[2]))
-                self.updatedRows.add((row, col))
+
+            if self.numberOfClicks == 1:
+                if current_color == self.grey:
+                    pass
+
+                elif current_color == self.pink:
+                    clicked_cell.setBackground(QColor(self.yellow[0], self.yellow[1],
+                                                          self.yellow[2]))
+                    self.updatedRows.add((row, col))
+                    self.numberOfCE[col - 1] += 1
+                elif current_color == self.yellow:
+                    clicked_cell.setBackground(QColor(self.pink[0], self.pink[1],
+                                                          self.pink[2]))
+                    self.updatedRows.add((row, col))
+                    self.numberOfCE[col - 1] -= 1
+                else:
+                    clicked_cell.setBackground(QColor(self.pink[0], self.pink[1],
+                                                          self.pink[2]))
+                    self.updatedRows.add((row, col))
+
+            elif self.numberOfClicks == 2:
+                if current_color == self.grey:
+                    pass
+
+                else:
+                    clicked_cell.setBackground(QColor(self.green[0], self.green[1],
+                                                          self.green[2]))
+                    if current_color == self.yellow:
+                        self.numberOfCE[col - 1] -= 1
+                    self.updatedRows.add((row, col))
 
             self.updateCECountLabels(col)
+
+            self.numberOfClicks = 0
+
         except Exception as e:
             print(e)
             pass
@@ -248,14 +286,6 @@ class VisualTable(QDialog):
         self.write_schedule.save(self.save_file_name)
         print("Button Pressed")
         self.close()
-
-
-
-
-
-
-
-
 
 
 
