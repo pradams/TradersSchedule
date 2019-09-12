@@ -20,6 +20,14 @@ class ExcelWriter:
         self.hour_shift_indexes = {}
         self.save_file_name = save_file_name
 
+        # Array holds different hour assignments for each shift.
+        shift_assignments = [['', '', '', 'pink', 'yellow', 'yellow', 'pink', 'pink'],
+                             ['', '', 'pink', 'yellow', 'yellow', 'pink', 'pink', 'pink']
+                             ['', '', 'pink', 'pink', 'pink', 'yellow', 'yellow', 'pink']
+                             ['', 'yellow', 'pink', 'yellow', 'pink', 'pink', 'pink', 'yellow']
+                             ['yellow', 'pink', 'pink', 'yellow', 'pink', 'yellow', 'yellow', 'pink']
+                             ]
+
     def translateHourToCell(self, time):
         hour_index = self.open_hour[1] + (round(time) - self.open_hour[0]) * 2
         return hour_index
