@@ -47,6 +47,7 @@ class VisualTable(QDialog):
         self.updatedRows = set([])
         self.save_file_name = new_filename
         self.day_index = day_index
+        self.col_width = 256 * 3
         self.initUI()
 
     def initUI(self):
@@ -185,6 +186,7 @@ class VisualTable(QDialog):
 
 
     def saveToExcel(self, write_sheet):
+        # Upadate the excel file with all updated cells in editor.
         for index in self.updatedRows:
             cell_color = self.tableWidget.item(index[0], index[1]).background().color().getRgb()
 
@@ -192,6 +194,19 @@ class VisualTable(QDialog):
                 self.setPink(index, write_sheet)
             else:
                 self.setYellow(index, write_sheet)
+
+        # Print CE count numbers in excel file.
+        style_main_label = xlwt.easyxf('pattern: pattern solid, fore_colour white; borders: left thin, right thin, top thin, bottom thin')
+        write_sheet.write(self.numEmployees[0]+4, 0, 'Number of CE Members', style_main_label)
+        style_left = xlwt.easyxf('pattern: pattern solid, fore_colour white; borders: left thin, top thin, bottom thin; align: horiz right')
+        style_right = xlwt.easyxf('pattern: pattern solid, fore_colour white; borders: right thin, top thin, bottom thin; align: horiz right')
+        ce_list_index = 0
+        for col in range(5, 30, 2):
+            write_sheet.col(col).width = self.col_width
+            write_sheet.write(self.numEmployees[0]+3, col, self.numberOfCE[ce_list_index], style_left)
+            write_sheet.write(self.numEmployees[0]+3, col+1, '', style_right)
+            ce_list_index += 1
+
 
     def clickedCell(self, cell):
         self.numberOfClicks += 1

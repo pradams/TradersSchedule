@@ -12,6 +12,8 @@ class MainIntroWindow(QDialog):
         super().__init__()
         self.original_filename = ''
         self.new_save_filename = ''
+        self.default_open_path = "/Users/Patrick/Desktop/TradersSchedule/test.xls"
+        self.default_save_path = "/Users/Patrick/Desktop/TradersSchedule/new_schedule.xls"
         self.open_file_found = False
         self.save_file_found = False
         self.day_index = 0
@@ -51,6 +53,21 @@ class MainIntroWindow(QDialog):
         self.run_program_button.setObjectName("run_program_button")
         self.run_program_button.clicked.connect(self.runProgram)
         self.run_program_button.setDisabled(True)
+
+        # Set up default file parameters
+        self.original_filename = self.default_open_path
+        self.lineEdit.setText(self.original_filename)
+        if self.original_filename:
+            self.open_file_found = True
+        self.new_save_filename = self.default_save_path
+        self.lineEdit_2.setText(self.new_save_filename)
+        if self.new_save_filename:
+            self.save_file_found = True
+
+        if self.open_file_found and self.save_file_found:
+            self.run_program_button.setDisabled(False)
+        else:
+            self.run_program_button.setDisabled(True)
 
         self.retranslateUi(Dialog)
         QMetaObject.connectSlotsByName(Dialog)
@@ -95,7 +112,7 @@ class MainIntroWindow(QDialog):
         options = file_dialog.Options()
         options |= file_dialog.DontUseNativeDialog
 
-        self.original_filename, _ = file_dialog.getOpenFileName(self, "Choose a schedule", "", "Excel Files (*.xls)", options=options)
+        self.original_filename, _ = file_dialog.getOpenFileName(self, "Choose a schedule", self.default_open_path, "Excel Files (*.xls)", options=options)
         if self.original_filename:
             self.open_file_found = True
             self.lineEdit.setText(self.original_filename)
@@ -113,7 +130,7 @@ class MainIntroWindow(QDialog):
         options = file_dialog.Options()
         options |= file_dialog.DontUseNativeDialog
 
-        self.new_save_filename, _ = file_dialog.getSaveFileName(self, "Choose new filename", "", "Excel Files (*.xls)", options= options)
+        self.new_save_filename, _ = file_dialog.getSaveFileName(self, "Choose new filename", self.default_save_path, "Excel Files (*.xls)", options= options)
         if self.new_save_filename[-4:] != ".xls":
             self.new_save_filename = self.new_save_filename + ".xls"
 

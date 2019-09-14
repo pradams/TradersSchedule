@@ -19,14 +19,17 @@ class ExcelWriter:
         self.shift_indexes = {}
         self.hour_shift_indexes = {}
         self.save_file_name = save_file_name
+        self.col_width = 256 * 3
 
         # Array holds different hour assignments for each shift.
+        '''
         shift_assignments = [['', '', '', 'pink', 'yellow', 'yellow', 'pink', 'pink'],
                              ['', '', 'pink', 'yellow', 'yellow', 'pink', 'pink', 'pink']
                              ['', '', 'pink', 'pink', 'pink', 'yellow', 'yellow', 'pink']
                              ['', 'yellow', 'pink', 'yellow', 'pink', 'pink', 'pink', 'yellow']
                              ['yellow', 'pink', 'pink', 'yellow', 'pink', 'yellow', 'yellow', 'pink']
                              ]
+                             '''
 
     def translateHourToCell(self, time):
         hour_index = self.open_hour[1] + (round(time) - self.open_hour[0]) * 2
@@ -39,9 +42,10 @@ class ExcelWriter:
             end_time = self.curr_sheet.cell(i, 2).value * 24
 
             # Keep track of indexes for each shift time.
-            if not self.shift_indexes.get(start_time):
-                self.shift_indexes[start_time] = []
-            self.shift_indexes[start_time].append(i)
+            if end_time - start_time > 5:
+                if not self.shift_indexes.get(start_time):
+                    self.shift_indexes[start_time] = []
+                self.shift_indexes[start_time].append(i)
 
             first_break = round(start_time) + 2
             second_break = round(end_time) - 2
@@ -55,7 +59,9 @@ class ExcelWriter:
 
             # Write calculated break times to new excel file.
             style = xlwt.easyxf('borders: left thin, right thin, top thin, bottom thin')
+            self.new_sheet.col(3).width = self.col_width
             self.new_sheet.write(i, 3, first_break, style)
+            self.new_sheet.col(4).width = self.col_width
             self.new_sheet.write(i, 4, second_break, style)
 
         self.new_book.save(self.save_file_name)
