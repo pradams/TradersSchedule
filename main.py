@@ -10,6 +10,7 @@ app = QApplication(sys.argv)
 browser = MainIntroWindow()
 
 # Close application.
+
 sys.exit(app.exec_())
 
 

@@ -38,6 +38,7 @@ class VisualTable(QDialog):
         self.numberOfClicks = 0
         self.clock.timeout.connect(self.handleClicks)
         self.cellClicked = 0
+        self.last_manager_row = 0
 
         self.read_schedule = xlrd.open_workbook(filename=new_filename, formatting_info=True, on_demand=True)
         self.write_schedule = copy(self.read_schedule)
@@ -102,6 +103,7 @@ class VisualTable(QDialog):
             # Extract the time from the excel document and format correctly.
             start_time = xlrd.xldate_as_tuple(self.new_sheet.cell(row,1).value, self.read_schedule.datemode)
             end_time = xlrd.xldate_as_tuple(self.new_sheet.cell(row,2).value, self.read_schedule.datemode)
+            print("Start: ", start_time)
             date_string_start = str(start_time[3]) + ":" + str(start_time[4])
             date_string_end = str(end_time[3]) + ":" + str(end_time[4])
             end_date = datetime.datetime.strptime(date_string_end, '%H:%M').strftime('%I:%M %p')
@@ -111,6 +113,8 @@ class VisualTable(QDialog):
             if row % 2 != 0:
                 cell_item.setBackground(QColor(235,235,235))
             self.tableWidget.setItem(row, 0, cell_item)
+            if end_time[3] - start_time[3] > 8:
+                self.last_manager_row = row
 
         # Set top row (title row) with hours of day.
         for col in range(1, 6):
@@ -156,9 +160,13 @@ class VisualTable(QDialog):
         for i in range(5, 30, 2):
             for row in range(2, self.numEmployees[0] + 2):
                 # Extracting style information to obtain background colour of cell.
-                xf = self.new_sheet.cell_xf_index(row, i)
-                xf_next = self.read_schedule.xf_list[xf]
-                colour_index = xf_next.background.pattern_colour_index
+                xf_left = self.new_sheet.cell_xf_index(row, i)
+                xf_next_left = self.read_schedule.xf_list[xf_left]
+                colour_index_left = xf_next_left.background.pattern_colour_index
+
+                xf_right = self.new_sheet.cell_xf_index(row, i+1)
+                xf_next_right = self.read_schedule.xf_list[xf_right]
+                colour_index_right = xf_next_right.background.pattern_colour_index
 
                 if (self.new_sheet.cell(row, i).value == 'L'):
                     cell_item = QTableWidgetItem('L')
@@ -169,19 +177,26 @@ class VisualTable(QDialog):
                 else:
                     cell_item = QTableWidgetItem('')
 
-
                 cell_item.setSizeHint(QSize(2, 2))
 
                 # Set the table cell the same color as the excel cell.
-                if colour_index == 45:
-                    cell_item.setBackground(QColor(self.pink[0], self.pink[1], self.pink[2]))
-                elif colour_index == 43:
-                    cell_item.setBackground(QColor(self.yellow[0], self.yellow[1], self.yellow[2]))
-                    self.numberOfCE[col-1] += 1
-                elif colour_index == 22:
-                    cell_item.setBackground(QColor(self.grey[0], self.grey[1], self.grey[2]))
+                if colour_index_left == colour_index_right:
+                    if colour_index_left == 45:
+                        cell_item.setBackground(QColor(self.pink[0], self.pink[1], self.pink[2]))
+                    elif colour_index_left == 43:
+                        cell_item.setBackground(QColor(self.yellow[0], self.yellow[1], self.yellow[2]))
+                        self.numberOfCE[col-1] += 1
+                    elif colour_index_left == 22:
+                        cell_item.setBackground(QColor(self.grey[0], self.grey[1], self.grey[2]))
 
-                self.tableWidget.setItem(row, col, cell_item)
+                    self.tableWidget.setItem(row, col, cell_item)
+                '''
+
+                else:
+                    cell_item.setBackground(QColor(self.grey[0], self.grey[1], self.grey[2]))
+                    self.tableWidget.setItem(row, col, cell_item)
+                '''
+
             col += 1
 
 
@@ -230,12 +245,16 @@ class VisualTable(QDialog):
                     clicked_cell.setBackground(QColor(self.yellow[0], self.yellow[1],
                                                           self.yellow[2]))
                     self.updatedRows.add((row, col))
-                    self.numberOfCE[col - 1] += 1
+
+                    # Checks if the cell belonged to manager to see if it should be included in CE Count.
+                    if row > self.last_manager_row:
+                        self.numberOfCE[col - 1] += 1
                 elif current_color == self.yellow:
                     clicked_cell.setBackground(QColor(self.pink[0], self.pink[1],
                                                           self.pink[2]))
                     self.updatedRows.add((row, col))
-                    self.numberOfCE[col - 1] -= 1
+                    if row > self.last_manager_row:
+                        self.numberOfCE[col - 1] -= 1
                 else:
                     clicked_cell.setBackground(QColor(self.pink[0], self.pink[1],
                                                           self.pink[2]))
@@ -249,7 +268,8 @@ class VisualTable(QDialog):
                     clicked_cell.setBackground(QColor(self.green[0], self.green[1],
                                                           self.green[2]))
                     if current_color == self.yellow:
-                        self.numberOfCE[col - 1] -= 1
+                        if row > self.last_manager_row:
+                            self.numberOfCE[col - 1] -= 1
                     self.updatedRows.add((row, col))
 
             self.updateCECountLabels(col)
