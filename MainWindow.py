@@ -99,8 +99,10 @@ class MainIntroWindow(QDialog):
         # Set up schedule (Color Cells)
         #excelWriter.colorCells()
 
+        excelWriter.colorCells()
+
         # This only used for original presentation purposes.
-        excelWriter.test_colorCells()
+        #excelWriter.test_colorCells()
 
         # Open editing table.
         ex = VisualTable(self.new_save_filename, excelWriter.calcNumEmployees(), self.day_index)

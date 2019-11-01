@@ -207,6 +207,8 @@ class VisualTable(QDialog):
 
             if cell_color == self.pink:
                 self.setPink(index, write_sheet)
+            elif cell_color == self.green:
+                self.setGreen(index, write_sheet)
             else:
                 self.setYellow(index, write_sheet)
 
@@ -311,6 +313,15 @@ class VisualTable(QDialog):
             'pattern: pattern solid, fore_colour rose; borders: right thin, top thin, bottom thin;')
         write_sheet.write(index[0], (index[1] * 2) + 4, right_value, style)
         # self.new_book.save('new_schedule.xls')
+
+    # Set cell color to green for bridge.
+    def setGreen(self, index, write_sheet):
+        style = xlwt.easyxf(
+            'pattern: pattern solid, fore_colour light_green; borders: left thin, top thin, bottom thin;')
+        write_sheet.write(index[0], (index[1] * 2) + 3, '', style)
+        style = xlwt.easyxf(
+            'pattern: pattern solid, fore_colour light_green; borders: right thin, top thin, bottom thin;')
+        write_sheet.write(index[0], (index[1] * 2) + 4, '', style)
 
 
     # Handle situation where save button is clicked.
