@@ -103,7 +103,6 @@ class VisualTable(QDialog):
             # Extract the time from the excel document and format correctly.
             start_time = xlrd.xldate_as_tuple(self.new_sheet.cell(row,1).value, self.read_schedule.datemode)
             end_time = xlrd.xldate_as_tuple(self.new_sheet.cell(row,2).value, self.read_schedule.datemode)
-            print("Start: ", start_time)
             date_string_start = str(start_time[3]) + ":" + str(start_time[4])
             date_string_end = str(end_time[3]) + ":" + str(end_time[4])
             end_date = datetime.datetime.strptime(date_string_end, '%H:%M').strftime('%I:%M %p')
@@ -188,7 +187,9 @@ class VisualTable(QDialog):
                         self.numberOfCE[col-1] += 1
                     elif colour_index_left == 22:
                         cell_item.setBackground(QColor(self.grey[0], self.grey[1], self.grey[2]))
-
+                    self.tableWidget.setItem(row, col, cell_item)
+                else:
+                    cell_item.setBackground(QColor(self.grey[0], self.grey[1], self.grey[2]))
                     self.tableWidget.setItem(row, col, cell_item)
                 '''
 
@@ -214,7 +215,7 @@ class VisualTable(QDialog):
 
         # Print CE count numbers in excel file.
         style_main_label = xlwt.easyxf('pattern: pattern solid, fore_colour white; borders: left thin, right thin, top thin, bottom thin')
-        write_sheet.write(self.numEmployees[0]+4, 0, 'Number of CE Members', style_main_label)
+        write_sheet.write(self.numEmployees[0]+3, 0, 'Number of CE Members', style_main_label)
         style_left = xlwt.easyxf('pattern: pattern solid, fore_colour white; borders: left thin, top thin, bottom thin; align: horiz right')
         style_right = xlwt.easyxf('pattern: pattern solid, fore_colour white; borders: right thin, top thin, bottom thin; align: horiz right')
         ce_list_index = 0

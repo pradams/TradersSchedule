@@ -21,6 +21,7 @@ class ExcelWriter:
         self.hour_shift_indexes = {}
         self.save_file_name = save_file_name
         self.col_width = 256 * 3
+        self.last_manager_row = 0
 
         # Contains the indexes that should have an L (for lunch). Used for writing L's after coloring cells.
         self.lunch_indexes = []
@@ -31,6 +32,12 @@ class ExcelWriter:
         self.mid_shifts = []
         self.closing_shifts = []
         self.all_shifts = []
+
+        #Recommended amount of CE members for each hour.
+        self.recommended_ce = [6, 9, 10, 11, 11, 11, 10, 11, 12, 13, 13, 11, 9]
+
+        # Reference matrix to store info for all cells.
+        self.reference_matrix = []
 
         ####### USED FOR TESTING ################################################################################
         # Array holds different hour assignments for each shift.
@@ -69,16 +76,22 @@ class ExcelWriter:
         return hour_index
 
     def calcBreakTimes(self):
-        for i in range(2, self.num_employees+2):
+        for row in range(2, self.num_employees+2):
             # Calculating actual times since cell times given in percentage of a 24 hour day.
-            start_time = self.curr_sheet.cell(i, 1).value * 24
-            end_time = self.curr_sheet.cell(i, 2).value * 24
+            start_time = self.curr_sheet.cell(row, 1).value * 24
+            end_time = self.curr_sheet.cell(row, 2).value * 24
+
+            # If manager (greater than 8 hours), record row. If row greater than certain number, don't change
+            # because it might be merchant that was not moved to top of log.
+            if end_time - start_time > 8:
+                if row < 18:
+                    self.last_manager_row = row
 
             # Keep track of indexes for each shift time.
             if end_time - start_time > 5:
                 if not self.shift_indexes.get(start_time):
                     self.shift_indexes[start_time] = []
-                self.shift_indexes[start_time].append(i)
+                self.shift_indexes[start_time].append(row)
 
             first_break = round(start_time) + 2
             second_break = round(end_time) - 2
@@ -93,16 +106,16 @@ class ExcelWriter:
             # Write calculated break times to new excel file.
             style = xlwt.easyxf('borders: left thin, right thin, top thin, bottom thin')
             self.new_sheet.col(3).width = self.col_width
-            self.new_sheet.write(i, 3, first_break, style)
+            self.new_sheet.write(row, 3, first_break, style)
             self.new_sheet.col(4).width = self.col_width
-            self.new_sheet.write(i, 4, second_break, style)
+            self.new_sheet.write(row, 4, second_break, style)
 
         self.new_book.save(self.save_file_name)
 
     def calcLunchTimes(self):
         for start_time in self.shift_indexes:
             temp_count = 0
-            count_modifier = -1
+            count_modifier = 0
             num_employees = len(self.shift_indexes[start_time])
             #shift_count_midpoint = round(len(self.shift_indexes[start_time]) / 2)
             shift_count_quarter = round(num_employees / 3)
@@ -110,15 +123,33 @@ class ExcelWriter:
                 end_time = self.curr_sheet.cell(index, 2).value * 24
 
                 # Lunch start_time starts 4 hours after start. Create base data that connects an 8oclock lunch to index 5.
-                lunch_time = round(start_time) + 4
+                lunch_time = math.ceil(start_time) + 4
+
+                '''                if num_employees > 4:
+                    # Use base data to calculate the index for lunch start_time.
+                    if start_time.is_integer():
+                        lunch_index -= 1
+                    else:
+                        lunch_index -= 2
+
+                    if temp_count >= shift_count_quarter:
+                        count_modifier += 1
+                        temp_count = 0
+                    lunch_index += count_modifier'''
 
                 # Use base data to calculate the index for lunch start_time.
-                lunch_index = self.open_hour[1] + (lunch_time - self.open_hour[0]) * 2
+                if start_time.is_integer():
+                    lunch_index = self.open_hour[1] + (lunch_time - self.open_hour[0]) * 2 - 1
+                else:
+                    lunch_index = self.open_hour[1] + (lunch_time - self.open_hour[0]) * 2 - 2
+
                 if num_employees > 4:
                     if temp_count >= shift_count_quarter:
                         count_modifier += 1
                         temp_count = 0
                     lunch_index += count_modifier
+                else:
+                    lunch_index += 1
 
                 # Make sure cell border styling is correct according to where in hour lunch will occur.
                 if lunch_index % 2:
@@ -133,16 +164,12 @@ class ExcelWriter:
                     new_employee_shift = EmployeeShift(index, int(lunch_index), start_time, end_time)
                     if start_time >= 14.5:
                         self.closing_shifts.append(new_employee_shift)
-                        print("Adding to close: ", new_employee_shift)
                     elif start_time >= 9.0:
                         self.mid_shifts.append(new_employee_shift)
-                        print("Adding to mid: ", new_employee_shift)
                     elif start_time >= 6.5:
                         self.morning_shifts.append(new_employee_shift)
-                        print("Adding to morning: ", new_employee_shift)
                     else:
                         self.open_shifts.append(new_employee_shift)
-                        print("Adding to opening: ", new_employee_shift)
                     temp_count += 1
                     self.all_shifts = [self.open_shifts, self.morning_shifts, self.mid_shifts, self.closing_shifts]
         self.new_book.save(self.save_file_name)
@@ -170,6 +197,10 @@ class ExcelWriter:
         style = xlwt.easyxf('pattern: pattern solid, fore_colour light_yellow; borders: right thin, top thin, bottom thin;')
         self.new_sheet.write(row, int(col+1), right_value, style)
 
+        self.setReferenceCell(row, col, 'yellow')
+        self.incrementReferenceCount(col)
+
+
     # Set cell to pink.
     def setPink(self, row, col):
         left_value = ''
@@ -182,6 +213,8 @@ class ExcelWriter:
         self.new_sheet.write(row, int(col), left_value, style)
         style = xlwt.easyxf('pattern: pattern solid, fore_colour rose; borders: right thin, top thin, bottom thin;')
         self.new_sheet.write(row, int(col + 1), right_value, style)
+
+        self.setReferenceCell(row, col, 'pink')
 
     # Function returns list of employees working on specific hour. Hour should be in military time.
     def calcHourEmployees(self, hour):
@@ -214,28 +247,53 @@ class ExcelWriter:
 
     # Function sets up the schedule for the day, coloring the cells accordingly.
     def colorCells(self):
+        self.createReferenceMatrix()
+
         # Category number 0=openshift, 1=morning, 2=mid, 3=closing
         category_num = 0
         for category in self.all_shifts:
             for shift in category:
+                start_cell = self.translateHourToCell(shift.start_time)
+                end_cell = self.translateHourToCell(shift.end_time)
 
                 # Set product for first and last halfs if shift starts at half hour mark.
                 if not shift.start_time.is_integer():
-                    start_cell = self.translateHourToCell(shift.start_time)
                     if start_cell > self.open_hour[1]:
                         style = xlwt.easyxf(
                             'pattern: pattern solid, fore_colour rose; borders: left thin, right thin, top thin, bottom thin;')
                         self.new_sheet.write(shift.row, int(start_cell)-1, '', style)
-                    end_cell = self.translateHourToCell(shift.end_time)
                     if end_cell <= 30:
                         style = xlwt.easyxf(
                             'pattern: pattern solid, fore_colour rose; borders: left thin, right thin, top thin, bottom thin;')
                         self.new_sheet.write(shift.row, int(end_cell)-2, "", style)
+                        self.setReferenceCell(shift.row, int(end_cell)-2, 'pink')
 
-                #Check if lunch given is at top or bottom of hour.
+                # If shift ends between 9:30 and 10 (starts between 1:30 and 2), give last hour CE
+                if shift.start_time >= 13.5 and shift.start_time <= 14:
+                    self.setYellow(shift.row, end_cell-4)
+                '''
+                if shift.start_time == 5.5:
+                    self.setYellow(shift.row, start_cell+4)
+                '''
+
+                # Check if lunch given is at top or bottom of hour.
                 lunch_top_of_hour = False
                 if shift.lunch_index % 2:
                     lunch_top_of_hour = True
+
+                # If shift before 5:30, set after lunch schedule as [P, Y, Y, P]
+                if shift.start_time < 5.5:
+                    curr_lunch_index = shift.lunch_index
+                    curr_row = shift.row
+                    self.setYellow(curr_row, curr_lunch_index-2)
+                    self.setYellow(curr_row, curr_lunch_index+4)
+                    self.setPink(curr_row, curr_lunch_index+6)
+
+                # If 5:30 shift, set last half of shift to one of 2 shifts (add second shift later)
+                if shift.start_time == 5.5:
+                    self.setYellow(shift.row, shift.lunch_index + 1)
+                    self.setYellow(shift.row, shift.lunch_index + 3)
+                    self.setPink(shift.row, shift.lunch_index + 5)
 
                 # Set lunch hour to pink for product. Also sets previous or after lunch hour to product.
                 if lunch_top_of_hour:
@@ -243,13 +301,15 @@ class ExcelWriter:
                     self.setPink(shift.row, shift.lunch_index + 2)
                 else:
                     self.setPink(shift.row, shift.lunch_index-1)
-                    self.setPink(shift.row, shift.lunch_index-3)
+                    if shift.lunch_index - 3 >= self.open_hour[1]:
+                        self.setPink(shift.row, shift.lunch_index-3)
 
+                # Set people that came in before or right after opening to CE first hour.
+                if 7.0 <= shift.start_time <= 8.5:
+                    self.setYellow(shift.row, self.open_hour[1])
             category_num += 1
 
         self.new_book.save(self.save_file_name)
-
-
 
     def test_colorCells(self):
         last_time_recorded = 0
@@ -300,6 +360,56 @@ class ExcelWriter:
 
         self.new_book.save(self.save_file_name)
 
+    # Creates a matrix that will contain the color of each cell, to be used by randomized part of cell assignment.
+    def createReferenceMatrix(self):
+        # Both lists will keep track of the first and last scheduled rows for the current hour(column)
+        first_scheduled_list = [-1]*13
+        last_scheduled_list = [-1]*13
+
+        for row in range(2, self.num_employees+2):
+            reference_row = []
+            for col in range(self.open_hour[1], 30, 2):
+
+                # Extracting style information to obtain background colour of cell.
+                xf = self.curr_sheet.cell_xf_index(row, col)
+                xf_next = self.book.xf_list[xf]
+                colour_index = xf_next.background.pattern_colour_index
+                if colour_index == 22:
+                    reference_row.append('gray')
+                else:
+                    reference_row.append('blank')
+
+                reference_col = int((col-5) / 2)
+                #print("Reference: ", first_scheduled_list[reference_col] == -1 and colour_index != 22)
+                #print("Colour: ", colour_index)
+                #print("Col: ", reference_col)
+                if row > self.last_manager_row:
+                    if first_scheduled_list[reference_col] == -1 and colour_index != 22:
+                        print("Setting First: ", row)
+                        first_scheduled_list[reference_col] = row
+                    if first_scheduled_list[reference_col] != -1 and last_scheduled_list[reference_col] == -1 and \
+                            last_scheduled_list[reference_col-1] < row and colour_index == 22:
+                        print("Setting Last")
+                        last_scheduled_list[reference_col] = row -1
+
+            self.reference_matrix.append(reference_row)
+
+        self.reference_matrix.append([0]*13)
+        self.reference_matrix.append(first_scheduled_list)
+        self.reference_matrix.append(last_scheduled_list)
+
+    def setReferenceCell(self, row, col, color):
+        reference_col = int((col - 5) / 2)
+        self.reference_matrix[row-2][reference_col] = color
+
+    def incrementReferenceCount(self, col):
+        reference_col = int((col - 5) / 2)
+        self.reference_matrix[self.num_employees][reference_col] += 1
+
+    def getReferenceCell(self, row, col):
+        reference_col = int((col - 5) / 2)
+        return self.reference_matrix[row-2][reference_col]
+
 class EmployeeShift:
 
     def __init__(self, row, lunch_index, start_time, end_time):
@@ -307,7 +417,6 @@ class EmployeeShift:
         self.lunch_index = lunch_index
         self.start_time = start_time
         self.end_time = end_time
-        #self.end_time = end_time
 
 
 
