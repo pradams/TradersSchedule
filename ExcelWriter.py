@@ -2,6 +2,7 @@ import xlrd
 import xlutils
 import xlwt
 import math
+import random
 
 
 class ExcelWriter:
@@ -200,6 +201,9 @@ class ExcelWriter:
         self.setReferenceCell(row, col, 'yellow')
         self.incrementReferenceCount(col)
 
+        # Increment the employees CE count in reference matrix.
+        self.reference_matrix[row-2][-1] += 1
+
 
     # Set cell to pink.
     def setPink(self, row, col):
@@ -307,9 +311,28 @@ class ExcelWriter:
                 # Set people that came in before or right after opening to CE first hour.
                 if 7.0 <= shift.start_time <= 8.5:
                     self.setYellow(shift.row, self.open_hour[1])
+
+
             category_num += 1
+        # Randomly fill in the rest of the cells until required CE count is met.
+        for col in range(0, len(self.reference_matrix[self.num_employees + 1])):
+            first_scheduled_hour = self.reference_matrix[self.num_employees + 1][col]
+            last_scheduled_hour = self.reference_matrix[self.num_employees + 2][col]
+            random_list = self.generateRandomCells(first_scheduled_hour, last_scheduled_hour)
+
+            for row in random_list:
+                if self.reference_matrix[row][col] == 'blank':
+                    print("INside")
+                    excel_col = self.translateHourToCell(col + 8)
+
+                    if self.reference_matrix[self.num_employees][col] < self.recommended_ce[col]:
+                        self.setYellow(row + 2, excel_col)
+                        # self.reference_matrix[self.num_employees][col] += 1
+                    else:
+                        self.setPink(row + 2, excel_col)
 
         self.new_book.save(self.save_file_name)
+        print("Here")
 
     def test_colorCells(self):
         last_time_recorded = 0
@@ -363,6 +386,7 @@ class ExcelWriter:
     # Creates a matrix that will contain the color of each cell, to be used by randomized part of cell assignment.
     def createReferenceMatrix(self):
         # Both lists will keep track of the first and last scheduled rows for the current hour(column)
+        # Last column keeps track of how many hours of CE an employee (row) has.
         first_scheduled_list = [-1]*13
         last_scheduled_list = [-1]*13
 
@@ -383,16 +407,26 @@ class ExcelWriter:
                 #print("Reference: ", first_scheduled_list[reference_col] == -1 and colour_index != 22)
                 #print("Colour: ", colour_index)
                 #print("Col: ", reference_col)
+
+                ##### Minuses adjusting rows for both lists are due to the offset between the excel document and reference matrix.
+                ##### Reference matrix's rows are 0 based index where excel is base 2.
                 if row > self.last_manager_row:
                     if first_scheduled_list[reference_col] == -1 and colour_index != 22:
                         print("Setting First: ", row)
-                        first_scheduled_list[reference_col] = row
+                        first_scheduled_list[reference_col] = row - 2
                     if first_scheduled_list[reference_col] != -1 and last_scheduled_list[reference_col] == -1 and \
                             last_scheduled_list[reference_col-1] < row and colour_index == 22:
                         print("Setting Last")
-                        last_scheduled_list[reference_col] = row -1
+                        last_scheduled_list[reference_col] = row -2
+                    if last_scheduled_list[reference_col] != -1 and colour_index != 22:
+                        last_scheduled_list[reference_col] = -1
 
+            reference_row.append(0)
             self.reference_matrix.append(reference_row)
+
+        for col in range(0, len(last_scheduled_list)):
+            if last_scheduled_list[col] == -1:
+                last_scheduled_list[col] = self.num_employees
 
         self.reference_matrix.append([0]*13)
         self.reference_matrix.append(first_scheduled_list)
@@ -404,11 +438,17 @@ class ExcelWriter:
 
     def incrementReferenceCount(self, col):
         reference_col = int((col - 5) / 2)
+        print("Incrementing: ", reference_col)
         self.reference_matrix[self.num_employees][reference_col] += 1
 
     def getReferenceCell(self, row, col):
         reference_col = int((col - 5) / 2)
         return self.reference_matrix[row-2][reference_col]
+
+    def generateRandomCells(self, low, high):
+        cell_list = list(range(low, high+1))
+        random.shuffle(cell_list)
+        return cell_list
 
 class EmployeeShift:
 
