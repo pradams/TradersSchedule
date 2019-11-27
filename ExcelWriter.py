@@ -315,6 +315,11 @@ class ExcelWriter:
 
             category_num += 1
         # Randomly fill in the rest of the cells until required CE count is met.
+
+        # Create lists for holding 3 hours of CE or less than 2 hours
+        hasThreeHours = []
+        lessThanTwoHours = []
+
         for col in range(0, len(self.reference_matrix[self.num_employees + 1])):
             first_scheduled_hour = self.reference_matrix[self.num_employees + 1][col]
             last_scheduled_hour = self.reference_matrix[self.num_employees + 2][col]
@@ -322,17 +327,29 @@ class ExcelWriter:
 
             for row in random_list:
                 if self.reference_matrix[row][col] == 'blank':
-                    print("INside")
                     excel_col = self.translateHourToCell(col + 8)
 
-                    if self.reference_matrix[self.num_employees][col] < self.recommended_ce[col]:
+                    if self.reference_matrix[self.num_employees][col] < self.recommended_ce[col] and self.shouldPlaceCe(row, col):
                         self.setYellow(row + 2, excel_col)
                         # self.reference_matrix[self.num_employees][col] += 1
                     else:
                         self.setPink(row + 2, excel_col)
 
+        # Add any rows that either have 3 hours of CE or less than 2 hours to respective lists.
+        for row in range(0, self.num_employees):
+            if self.reference_matrix[row][-1] == 3:
+                hasThreeHours.append(row)
+            elif self.reference_matrix[row][-1] < 2:
+                print("Test: ", self.reference_matrix[row][-1])
+                lessThanTwoHours.append(row)
+
+        # Go through schedule and attempt to even out the number of CE hours across the employees.
+        if len(hasThreeHours) != 0:
+            pass
+
+
         self.new_book.save(self.save_file_name)
-        print("Here")
+        pass
 
     def test_colorCells(self):
         last_time_recorded = 0
@@ -449,6 +466,20 @@ class ExcelWriter:
         cell_list = list(range(low, high+1))
         random.shuffle(cell_list)
         return cell_list
+
+
+    # Method checks surrounding cells and decides if CE cell should be placed in current column.
+    def shouldPlaceCe(self, row, col):
+        answer = True
+        if self.reference_matrix[row][-1] > 2:
+            answer = False
+        if self.reference_matrix[row][col-1] == 'yellow' and self.reference_matrix[row][col-2] == 'yellow':
+            answer = False
+        if self.reference_matrix[row][col+1] == 'yellow' and self.reference_matrix[row][col+2] == 'yellow':
+            answer = False
+        if self.reference_matrix[row][col-1] == 'yellow' and self.reference_matrix[row][col+1] == 'yellow':
+            answer = False
+        return answer
 
 class EmployeeShift:
 
