@@ -21,8 +21,8 @@ class VisualTable(QDialog):
         self.title = "Trader's Scheduler"
         self.left = 100
         self.top = 100
-        self.width = 900
-        self.height = 700
+        self.width = 1150
+        self.height = 1000
 
         # Colors
         self.pink = (255, 153, 204, 255)
@@ -44,6 +44,7 @@ class VisualTable(QDialog):
         self.write_schedule = copy(self.read_schedule)
         self.new_sheet = self.read_schedule.get_sheet(day_index+3)
         self.numberOfCE = [0] * 13
+        self.numberOfPT = [0] * 13
         self.numEmployees = numEmployees
         self.updatedRows = set([])
         self.save_file_name = new_filename
@@ -117,11 +118,13 @@ class VisualTable(QDialog):
 
         # Set top row (title row) with hours of day.
         for col in range(1, 6):
-            item = "  " + str(col+7) + "  "
+            item = "  " + str(col+7) + "AM  "
+            if str(col+7) == '12':
+                item = "  " + str(col+7) + "PM  "
             self.tableWidget.setItem(1, col, QTableWidgetItem(item))
             head.setSectionResizeMode(col, QHeaderView.ResizeToContents)
         for col in range(6, 14):
-            item = "  " + str(col - 5) + "  "
+            item = "  " + str(col - 5) + "PM  "
             self.tableWidget.setItem(1, col, QTableWidgetItem(item))
             head.setSectionResizeMode(col, QHeaderView.ResizeToContents)
 
@@ -139,9 +142,11 @@ class VisualTable(QDialog):
                 cell_item = QTableWidgetItem('# of CE Members: ')
                 cell_item.setTextAlignment(Qt.AlignCenter)
             else:
-                item = "  " + str(self.numberOfCE[col-1]) + "  "
+                item = "   " + str(self.numberOfCE[col-1]) + " "
                 cell_item = QTableWidgetItem(item)
-            cell_item.setBackground(QColor(115, 194, 246))
+            #cell_item.setBackground(QColor(115, 194, 246))
+            cell_item.setBackground(QColor(255, 255, 153))
+
             self.tableWidget.setItem(0, col, cell_item)
 
 
@@ -285,7 +290,7 @@ class VisualTable(QDialog):
 
     # Function updates the cell count depending whether changed to yellow or from yellow.
     def updateCECountLabels(self, col):
-        item = "  " + str(self.numberOfCE[col - 1]) + "  "
+        item = "   " + str(self.numberOfCE[col - 1]) + "   "
         cell_item = QTableWidgetItem(item)
         #cell_item.setFont(QFont("Helvetica", 10, QFont().bold))
         cell_item.setBackground(QColor(115, 194, 246))

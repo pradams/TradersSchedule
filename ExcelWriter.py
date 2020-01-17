@@ -4,7 +4,6 @@ import xlwt
 import math
 import random
 
-
 class ExcelWriter:
 
     # new_book = New excel that will represent filled out schedule.
@@ -36,6 +35,7 @@ class ExcelWriter:
 
         #Recommended amount of CE members for each hour.
         self.recommended_ce = [6, 9, 10, 11, 11, 11, 10, 11, 12, 13, 13, 11, 9]
+        self.max_recommended_ce = [9, 12, 13, 14, 14, 13, 14, 15, 14, 14, 13, 11]
 
         # Reference matrix to store info for all cells.
         self.reference_matrix = []
@@ -206,7 +206,7 @@ class ExcelWriter:
 
 
     # Set cell to pink.
-    def setPink(self, row, col):
+    def setPink(self, row, col, fromYellow):
         left_value = ''
         right_value = ''
         if (row, int(col)) in self.lunch_indexes:
@@ -219,6 +219,13 @@ class ExcelWriter:
         self.new_sheet.write(row, int(col + 1), right_value, style)
 
         self.setReferenceCell(row, col, 'pink')
+
+
+        # Decrement the employees CE count in reference matrix.
+        if fromYellow:
+            self.reference_matrix[row - 2][-1] -= 1
+            self.decrementReferenceCount(col)
+
 
     # Function returns list of employees working on specific hour. Hour should be in military time.
     def calcHourEmployees(self, hour):
@@ -291,31 +298,32 @@ class ExcelWriter:
                     curr_row = shift.row
                     self.setYellow(curr_row, curr_lunch_index-2)
                     self.setYellow(curr_row, curr_lunch_index+4)
-                    self.setPink(curr_row, curr_lunch_index+6)
+                    self.setPink(curr_row, curr_lunch_index+6, False)
 
                 # If 5:30 shift, set last half of shift to one of 2 shifts (add second shift later)
                 if shift.start_time == 5.5:
                     self.setYellow(shift.row, shift.lunch_index + 1)
                     self.setYellow(shift.row, shift.lunch_index + 3)
-                    self.setPink(shift.row, shift.lunch_index + 5)
+                    self.setPink(shift.row, shift.lunch_index + 5, False)
 
                 # Set lunch hour to pink for product. Also sets previous or after lunch hour to product.
                 if lunch_top_of_hour:
-                    self.setPink(shift.row, shift.lunch_index)
-                    self.setPink(shift.row, shift.lunch_index + 2)
+                    self.setPink(shift.row, shift.lunch_index, False)
+                    self.setPink(shift.row, shift.lunch_index + 2, False)
+                    self.setReferenceCell(shift.row, shift.lunch_index, 'top_lunch')
                 else:
-                    self.setPink(shift.row, shift.lunch_index-1)
+                    self.setPink(shift.row, shift.lunch_index-1, False)
+                    self.setReferenceCell(shift.row, shift.lunch_index-1, 'bottom_lunch')
                     if shift.lunch_index - 3 >= self.open_hour[1]:
-                        self.setPink(shift.row, shift.lunch_index-3)
+                        self.setPink(shift.row, shift.lunch_index-3, False)
 
                 # Set people that came in before or right after opening to CE first hour.
                 if 7.0 <= shift.start_time <= 8.5:
                     self.setYellow(shift.row, self.open_hour[1])
 
-
             category_num += 1
-        # Randomly fill in the rest of the cells until required CE count is met.
 
+        # Randomly fill in the rest of the cells until required CE count is met.
         # Create lists for holding 3 hours of CE or less than 2 hours
         hasThreeHours = []
         lessThanTwoHours = []
@@ -333,23 +341,69 @@ class ExcelWriter:
                         self.setYellow(row + 2, excel_col)
                         # self.reference_matrix[self.num_employees][col] += 1
                     else:
-                        self.setPink(row + 2, excel_col)
+                        self.setPink(row + 2, excel_col, False)
 
         # Add any rows that either have 3 hours of CE or less than 2 hours to respective lists.
-        for row in range(0, self.num_employees):
-            if self.reference_matrix[row][-1] == 3:
+        for row in range(self.last_manager_row, self.num_employees):
+            if self.reference_matrix[row][-1] >= 3:
                 hasThreeHours.append(row)
             elif self.reference_matrix[row][-1] < 2:
-                print("Test: ", self.reference_matrix[row][-1])
                 lessThanTwoHours.append(row)
 
         # Go through schedule and attempt to even out the number of CE hours across the employees.
-        if len(hasThreeHours) != 0:
-            pass
+        '''
+        while len(lessThanTwoHours) != 0:
+            adding_row = lessThanTwoHours.pop()
+            removing_row = hasThreeHours.pop()
+            while(True):
+                print("Replacing %d with %d: ", (adding_row, removing_row))
+                col_one = random.randrange(0, len(self.reference_matrix[self.num_employees + 1]))
+                #self.reference_matrix[self.num_employees][col_one] - 1 >= self.recommended_ce[col_one]
+                if self.reference_matrix[removing_row][col_one] == 'yellow' and self.reference_matrix[self.num_employees][col_one]-1 >= self.recommended_ce[col_one]:
+                    while(True):
+                        col_two = random.randrange(0, len(self.reference_matrix[self.num_employees + 1]))
+                        if self.shouldPlaceCe(adding_row, col_two):
+                            self.setYellow(adding_row+2, self.translateHourToCell(col_two + 8))
+                            self.setPink(removing_row+2, self.translateHourToCell(col_one + 8), True)
+                            break
+                    break
+                else:
+                    break
+        '''
 
+        while len(lessThanTwoHours) != 0:
+            for adding_row in lessThanTwoHours:
+                row_was_set = False
+                for removing_row in hasThreeHours:
+                    if row_was_set:
+                        break
+                    #col_one = random.randrange(0, len(self.reference_matrix[self.num_employees + 1]))
+                    shuffled_list_one = list(range(0, len(self.reference_matrix[self.num_employees + 1])))
+                    shuffled_list_two = list(range(0, len(self.reference_matrix[self.num_employees + 1])))
+                    random.shuffle(shuffled_list_one)
+                    random.shuffle(shuffled_list_two)
+                    for col_one in shuffled_list_one:
+                        if self.reference_matrix[removing_row][col_one] == 'yellow' and self.reference_matrix[self.num_employees][col_one] - 1 >= self.recommended_ce[col_one]:
+                            for col_two in shuffled_list_two:
+                                #col_two = random.randrange(0, len(self.reference_matrix[self.num_employees + 1]))
+                                if self.shouldPlaceCe(adding_row, col_two):
+                                    self.setYellow(adding_row + 2, self.translateHourToCell(col_two + 8))
+                                    self.setPink(removing_row + 2, self.translateHourToCell(col_one + 8), True)
+                                    lessThanTwoHours.remove(adding_row)
+                                    hasThreeHours.remove(removing_row)
+                                    row_was_set = True
+                                    break
+                        if row_was_set:
+                            break
+
+        print("less than: ", len(lessThanTwoHours))
+        print("has three: ", len(hasThreeHours))
 
         self.new_book.save(self.save_file_name)
+        print(self.reference_matrix)
         pass
+
+
 
     def test_colorCells(self):
         last_time_recorded = 0
@@ -383,7 +437,7 @@ class ExcelWriter:
                         self.setYellow(row, hour_index + index_count)
                         index_count += 2
                     elif assignment == 'pink':
-                        self.setPink(row, hour_index + index_count)
+                        self.setPink(row, hour_index + index_count, False)
                         index_count += 2
                     time_count += 1
 
@@ -394,7 +448,7 @@ class ExcelWriter:
                     if assignment == 'yellow':
                         self.setYellow(row, hour_index + index_count)
                     elif assignment == 'pink':
-                        self.setPink(row, hour_index + index_count)
+                        self.setPink(row, hour_index + index_count, False)
                     time_count += 1
                     index_count += 2
 
@@ -455,8 +509,11 @@ class ExcelWriter:
 
     def incrementReferenceCount(self, col):
         reference_col = int((col - 5) / 2)
-        print("Incrementing: ", reference_col)
         self.reference_matrix[self.num_employees][reference_col] += 1
+
+    def decrementReferenceCount(self, col):
+        reference_col = int((col - 5) / 2)
+        self.reference_matrix[self.num_employees][reference_col] -= 1
 
     def getReferenceCell(self, row, col):
         reference_col = int((col - 5) / 2)
@@ -471,6 +528,12 @@ class ExcelWriter:
     # Method checks surrounding cells and decides if CE cell should be placed in current column.
     def shouldPlaceCe(self, row, col):
         answer = True
+        if self.reference_matrix[row][col] == 'yellow':
+            answer = False
+        if self.reference_matrix[row][col] == 'top_lunch' or self.reference_matrix[row][col] == 'bottom_lunch':
+            answer = False
+        if self.reference_matrix[row][col] == 'gray':
+            answer = False
         if self.reference_matrix[row][-1] > 2:
             answer = False
         if self.reference_matrix[row][col-1] == 'yellow' and self.reference_matrix[row][col-2] == 'yellow':
@@ -480,6 +543,43 @@ class ExcelWriter:
         if self.reference_matrix[row][col-1] == 'yellow' and self.reference_matrix[row][col+1] == 'yellow':
             answer = False
         return answer
+
+    # Method checks to see if there are three product rows in a row to place a new CE row.
+    def threePinkInRow(self, row, col):
+        answer = False
+        placing_col = -1
+        '''
+        if self.reference_matrix[row][col] == 'pink':
+            if self.reference_matrix[row][col-1] == 'pink' and self.self.reference_matrix[row][col-2] == 'pink':
+                answer = True
+                if self.reference_matrix[row][col-3] == 'lunch': <---- check top/bottom lunch
+                    placing_col = col-1
+                else:
+                    placing_col = col-2
+            elif self.reference_matrix[row][col-1] == 'pink' and self.reference_matrix[row][col+1] == 'pink':
+                answer = True
+                placing
+            elif self.reference_matrix[row][col+1] == 'pink' and self.reference_matrix[row][col+2] == 'pink':
+                answer = True
+        '''
+
+        if self.reference_matrix[row][col] == 'pink':
+            if self.reference_matrix[row][col +1] == 'pink' and self.reference_matrix[row][col+2] == 'pink':
+                answer = True
+                if self.reference_matrix[row][col-1] == 'top_lunch':
+                    placing_col = col + 1
+                elif self.reference_matrix[row][col-1] == 'bottom_lunch':
+                    placing_col = col
+                elif self.reference_matrix[row][col+3] == 'top_lunch':
+                    placing_col = col + 2
+                elif self.reference_matrix[row][col+3] == 'bottom_lunch':
+                    placing_col = col + 1
+                else:
+                    random_modifier = random.randint(0,1)
+                    placing_col = col + random_modifier
+        return (answer, placing_col)
+
+
 
 class EmployeeShift:
 
