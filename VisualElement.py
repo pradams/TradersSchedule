@@ -67,7 +67,7 @@ class VisualTable(QDialog):
     def createTable(self):
         print("Creating Table")
         # Settings for main table with employees
-        self.tableWidget.setRowCount(self.numEmployees[0]+2)
+        self.tableWidget.setRowCount(self.numEmployees[0]+3)
         self.tableWidget.setColumnCount(14)
         self.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
@@ -94,7 +94,7 @@ class VisualTable(QDialog):
         layout.setAlignment(Qt.AlignCenter)
         layout.setContentsMargins(0, 0, 0, 0)
         widget.setLayout(layout)
-        self.tableWidget.setCellWidget(1, 0, widget)
+        self.tableWidget.setCellWidget(2, 0, widget)
 
         head = self.tableWidget.horizontalHeader()
 
@@ -112,7 +112,7 @@ class VisualTable(QDialog):
             cell_item = QTableWidgetItem(item)
             if row % 2 != 0:
                 cell_item.setBackground(QColor(235,235,235))
-            self.tableWidget.setItem(row, 0, cell_item)
+            self.tableWidget.setItem(row+1, 0, cell_item)
             if end_time[3] - start_time[3] > 8:
                 self.last_manager_row = row
 
@@ -121,11 +121,11 @@ class VisualTable(QDialog):
             item = "  " + str(col+7) + "AM  "
             if str(col+7) == '12':
                 item = "  " + str(col+7) + "PM  "
-            self.tableWidget.setItem(1, col, QTableWidgetItem(item))
+            self.tableWidget.setItem(2, col, QTableWidgetItem(item))
             head.setSectionResizeMode(col, QHeaderView.ResizeToContents)
         for col in range(6, 14):
             item = "  " + str(col - 5) + "PM  "
-            self.tableWidget.setItem(1, col, QTableWidgetItem(item))
+            self.tableWidget.setItem(2, col, QTableWidgetItem(item))
             head.setSectionResizeMode(col, QHeaderView.ResizeToContents)
 
         # Resize cell to length of name.
@@ -136,19 +136,23 @@ class VisualTable(QDialog):
         self.tableWidget.clicked.connect(self.clickedCell)
         #self.tableWidget.doubleClicked.connect(self.handleDoubleClick)
 
-        # Set CE Count row a different color than the rest, and connect to numbers stored (self.numOfCE)
+        # Set CE/PT Count row a different color than the rest, and connect to numbers stored (self.numOfCE/self.numOfPT)
         for col in range(0, self.tableWidget.columnCount()):
             if col == 0:
-                cell_item = QTableWidgetItem('# of CE Members: ')
-                cell_item.setTextAlignment(Qt.AlignCenter)
+                cell_item_CE = QTableWidgetItem('# of CE Members: ')
+                cell_item_PT = QTableWidgetItem('# of PT Members: ')
+                cell_item_CE.setTextAlignment(Qt.AlignCenter)
+                cell_item_PT.setTextAlignment(Qt.AlignCenter)
             else:
-                item = "   " + str(self.numberOfCE[col-1]) + " "
-                cell_item = QTableWidgetItem(item)
-            #cell_item.setBackground(QColor(115, 194, 246))
-            cell_item.setBackground(QColor(255, 255, 153))
+                item_CE = "   " + str(self.numberOfCE[col-1]) + " "
+                cell_item_CE = QTableWidgetItem(item_CE)
+                item_PT = "   " + str(self.numberOfPT[col-1]) + " "
+                cell_item_PT = QTableWidgetItem(item_PT)
+            cell_item_CE.setBackground(QColor(255, 255, 153))
+            cell_item_PT.setBackground(QColor(255, 153, 204))
 
-            self.tableWidget.setItem(0, col, cell_item)
-
+            self.tableWidget.setItem(0, col, cell_item_CE)
+            self.tableWidget.setItem(1, col, cell_item_PT)
 
         # Set tablewidget to QDialog.
         self.setLayout(self.layout)
@@ -162,7 +166,7 @@ class VisualTable(QDialog):
 
         # Iterate over every cell, col first, row second.
         for i in range(5, 30, 2):
-            for row in range(2, self.numEmployees[0] + 2):
+            for row in range(3, self.numEmployees[0] + 3):
                 # Extracting style information to obtain background colour of cell.
                 xf_left = self.new_sheet.cell_xf_index(row, i)
                 xf_next_left = self.read_schedule.xf_list[xf_left]
@@ -187,6 +191,7 @@ class VisualTable(QDialog):
                 if colour_index_left == colour_index_right:
                     if colour_index_left == 45:
                         cell_item.setBackground(QColor(self.pink[0], self.pink[1], self.pink[2]))
+                        self.numberOfPT[col-1] += 1
                     elif colour_index_left == 43:
                         cell_item.setBackground(QColor(self.yellow[0], self.yellow[1], self.yellow[2]))
                         self.numberOfCE[col-1] += 1
@@ -226,8 +231,8 @@ class VisualTable(QDialog):
         ce_list_index = 0
         for col in range(5, 30, 2):
             write_sheet.col(col).width = self.col_width
-            write_sheet.write(self.numEmployees[0]+3, col, self.numberOfCE[ce_list_index], style_left)
-            write_sheet.write(self.numEmployees[0]+3, col+1, '', style_right)
+            write_sheet.write(self.numEmployees[0]+4, col, self.numberOfCE[ce_list_index], style_left)
+            write_sheet.write(self.numEmployees[0]+4, col+1, '', style_right)
             ce_list_index += 1
 
 
@@ -257,16 +262,20 @@ class VisualTable(QDialog):
                     # Checks if the cell belonged to manager to see if it should be included in CE Count.
                     if row > self.last_manager_row:
                         self.numberOfCE[col - 1] += 1
+                        self.numberOfPT[col - 1] -= 1
                 elif current_color == self.yellow:
                     clicked_cell.setBackground(QColor(self.pink[0], self.pink[1],
                                                           self.pink[2]))
                     self.updatedRows.add((row, col))
                     if row > self.last_manager_row:
                         self.numberOfCE[col - 1] -= 1
+                        self.numberOfPT[col - 1] += 1
                 else:
                     clicked_cell.setBackground(QColor(self.pink[0], self.pink[1],
                                                           self.pink[2]))
                     self.updatedRows.add((row, col))
+                    if row > self.last_manager_row:
+                        self.numberOfPT[col - 1] += 1
 
             elif self.numberOfClicks == 2:
                 if current_color == self.grey:
@@ -278,46 +287,53 @@ class VisualTable(QDialog):
                     if current_color == self.yellow:
                         if row > self.last_manager_row:
                             self.numberOfCE[col - 1] -= 1
+                    elif current_color == self.pink:
+                        if row > self.last_manager_row:
+                            self.numberOfPT[col-1] -= 1
+
                     self.updatedRows.add((row, col))
 
-            self.updateCECountLabels(col)
-
+            self.updateCountLabels(col)
             self.numberOfClicks = 0
 
         except Exception as e:
             print(e)
             pass
 
-    # Function updates the cell count depending whether changed to yellow or from yellow.
-    def updateCECountLabels(self, col):
-        item = "   " + str(self.numberOfCE[col - 1]) + "   "
-        cell_item = QTableWidgetItem(item)
-        #cell_item.setFont(QFont("Helvetica", 10, QFont().bold))
-        cell_item.setBackground(QColor(115, 194, 246))
-        self.tableWidget.setItem(0, col, cell_item)
+    # Function updates the cell count depending on color change.
+    def updateCountLabels(self, col):
+        item_CE = "   " + str(self.numberOfCE[col - 1]) + "   "
+        cell_item_CE = QTableWidgetItem(item_CE)
+        cell_item_CE.setBackground(QColor(255, 255, 153))
+        self.tableWidget.setItem(0, col, cell_item_CE)
+
+        item_PT = "   " + str(self.numberOfPT[col - 1]) + "   "
+        cell_item_PT = QTableWidgetItem(item_PT)
+        cell_item_PT.setBackground(QColor(255, 153, 204))
+        self.tableWidget.setItem(1, col, cell_item_PT)
 
     # Set cell to yellow.
     def setYellow(self, index, write_sheet):
-        left_value = self.new_sheet.cell(index[0], (index[1] * 2) + 3).value
-        right_value = self.new_sheet.cell(index[0], (index[1] * 2) + 4).value
+        left_value = self.new_sheet.cell(index[0]-1, (index[1] * 2) + 3).value
+        right_value = self.new_sheet.cell(index[0]-1, (index[1] * 2) + 4).value
         style = xlwt.easyxf(
             'pattern: pattern solid, fore_colour light_yellow; borders: left thin, top thin, bottom thin;')
-        write_sheet.write(index[0], (index[1] * 2) + 3, left_value, style)
+        write_sheet.write(index[0]-1, (index[1] * 2) + 3, left_value, style)
         style = xlwt.easyxf(
             'pattern: pattern solid, fore_colour light_yellow; borders: right thin, top thin, bottom thin;')
-        write_sheet.write(index[0], (index[1] * 2) + 4, right_value, style)
+        write_sheet.write(index[0]-1, (index[1] * 2) + 4, right_value, style)
         # self.new_book.save('new_schedule.xls')
 
     # Set cell to pink.
     def setPink(self, index, write_sheet):
-        left_value = self.new_sheet.cell(index[0], (index[1] * 2) + 3).value
-        right_value = self.new_sheet.cell(index[0], (index[1] * 2) + 4).value
+        left_value = self.new_sheet.cell(index[0]-1, (index[1] * 2) + 3).value
+        right_value = self.new_sheet.cell(index[0]-1, (index[1] * 2) + 4).value
         style = xlwt.easyxf(
             'pattern: pattern solid, fore_colour rose; borders: left thin, top thin, bottom thin;')
-        write_sheet.write(index[0], (index[1] * 2) + 3, left_value, style)
+        write_sheet.write(index[0]-1, (index[1] * 2) + 3, left_value, style)
         style = xlwt.easyxf(
             'pattern: pattern solid, fore_colour rose; borders: right thin, top thin, bottom thin;')
-        write_sheet.write(index[0], (index[1] * 2) + 4, right_value, style)
+        write_sheet.write(index[0]-1, (index[1] * 2) + 4, right_value, style)
         # self.new_book.save('new_schedule.xls')
 
     # Set cell color to green for bridge.
