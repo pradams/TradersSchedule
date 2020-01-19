@@ -3,6 +3,8 @@ import xlutils
 import xlwt
 import math
 import random
+from sortedcontainers import SortedDict
+import time
 
 class ExcelWriter:
 
@@ -22,6 +24,7 @@ class ExcelWriter:
         self.save_file_name = save_file_name
         self.col_width = 256 * 3
         self.last_manager_row = 0
+        self.row_ce_count = {}
 
         # Contains the indexes that should have an L (for lunch). Used for writing L's after coloring cells.
         self.lunch_indexes = []
@@ -121,58 +124,59 @@ class ExcelWriter:
             #shift_count_midpoint = round(len(self.shift_indexes[start_time]) / 2)
             shift_count_quarter = round(num_employees / 3)
             for index in self.shift_indexes[start_time]:
-                end_time = self.curr_sheet.cell(index, 2).value * 24
+                if index > self.last_manager_row:
+                    end_time = self.curr_sheet.cell(index, 2).value * 24
 
-                # Lunch start_time starts 4 hours after start. Create base data that connects an 8oclock lunch to index 5.
-                lunch_time = math.ceil(start_time) + 4
+                    # Lunch start_time starts 4 hours after start. Create base data that connects an 8oclock lunch to index 5.
+                    lunch_time = math.ceil(start_time) + 4
 
-                '''                if num_employees > 4:
+                    '''                if num_employees > 4:
+                        # Use base data to calculate the index for lunch start_time.
+                        if start_time.is_integer():
+                            lunch_index -= 1
+                        else:
+                            lunch_index -= 2
+    
+                        if temp_count >= shift_count_quarter:
+                            count_modifier += 1
+                            temp_count = 0
+                        lunch_index += count_modifier'''
+
                     # Use base data to calculate the index for lunch start_time.
                     if start_time.is_integer():
-                        lunch_index -= 1
+                        lunch_index = self.open_hour[1] + (lunch_time - self.open_hour[0]) * 2 - 1
                     else:
-                        lunch_index -= 2
+                        lunch_index = self.open_hour[1] + (lunch_time - self.open_hour[0]) * 2 - 2
 
-                    if temp_count >= shift_count_quarter:
-                        count_modifier += 1
-                        temp_count = 0
-                    lunch_index += count_modifier'''
-
-                # Use base data to calculate the index for lunch start_time.
-                if start_time.is_integer():
-                    lunch_index = self.open_hour[1] + (lunch_time - self.open_hour[0]) * 2 - 1
-                else:
-                    lunch_index = self.open_hour[1] + (lunch_time - self.open_hour[0]) * 2 - 2
-
-                if num_employees > 4:
-                    if temp_count >= shift_count_quarter:
-                        count_modifier += 1
-                        temp_count = 0
-                    lunch_index += count_modifier
-                else:
-                    lunch_index += 1
-
-                # Make sure cell border styling is correct according to where in hour lunch will occur.
-                if lunch_index % 2:
-                    style = xlwt.easyxf('borders: left thin, right thin, top thin, bottom thin')
-                else:
-                    style = xlwt.easyxf('borders: left thin, right thin, top thin, bottom thin')
-                self.new_sheet.write(index, int(lunch_index), 'L', style)
-                self.lunch_indexes.append((index, int(lunch_index)))
-
-                # Create an employee shift object and add to appropriate shift list if not manager.
-                if end_time - start_time <= 8:
-                    new_employee_shift = EmployeeShift(index, int(lunch_index), start_time, end_time)
-                    if start_time >= 14.5:
-                        self.closing_shifts.append(new_employee_shift)
-                    elif start_time >= 9.0:
-                        self.mid_shifts.append(new_employee_shift)
-                    elif start_time >= 6.5:
-                        self.morning_shifts.append(new_employee_shift)
+                    if num_employees > 4:
+                        if temp_count >= shift_count_quarter:
+                            count_modifier += 1
+                            temp_count = 0
+                        lunch_index += count_modifier
                     else:
-                        self.open_shifts.append(new_employee_shift)
-                    temp_count += 1
-                    self.all_shifts = [self.open_shifts, self.morning_shifts, self.mid_shifts, self.closing_shifts]
+                        lunch_index += 1
+
+                    # Make sure cell border styling is correct according to where in hour lunch will occur.
+                    if lunch_index % 2:
+                        style = xlwt.easyxf('borders: left thin, right thin, top thin, bottom thin')
+                    else:
+                        style = xlwt.easyxf('borders: left thin, right thin, top thin, bottom thin')
+                    self.new_sheet.write(index, int(lunch_index), 'L', style)
+                    self.lunch_indexes.append((index, int(lunch_index)))
+
+                    # Create an employee shift object and add to appropriate shift list if not manager.
+                    if end_time - start_time <= 8:
+                        new_employee_shift = EmployeeShift(index, int(lunch_index), start_time, end_time)
+                        if start_time >= 14.5:
+                            self.closing_shifts.append(new_employee_shift)
+                        elif start_time >= 9.0:
+                            self.mid_shifts.append(new_employee_shift)
+                        elif start_time >= 6.5:
+                            self.morning_shifts.append(new_employee_shift)
+                        else:
+                            self.open_shifts.append(new_employee_shift)
+                        temp_count += 1
+                        self.all_shifts = [self.open_shifts, self.morning_shifts, self.mid_shifts, self.closing_shifts]
         self.new_book.save(self.save_file_name)
 
     # Creates list of employees. Returns number of employees and list of employees working that day.
@@ -198,11 +202,15 @@ class ExcelWriter:
         style = xlwt.easyxf('pattern: pattern solid, fore_colour light_yellow; borders: right thin, top thin, bottom thin;')
         self.new_sheet.write(row, int(col+1), right_value, style)
 
+        print("Setting cell yellow: ", (row, col))
         self.setReferenceCell(row, col, 'yellow')
         self.incrementReferenceCount(col)
 
         # Increment the employees CE count in reference matrix.
+        print("Trying Value: ", self.reference_matrix[row-2][-1])
         self.reference_matrix[row-2][-1] += 1
+
+        #self.row_ce_count[row] += 1
 
 
     # Set cell to pink.
@@ -264,6 +272,11 @@ class ExcelWriter:
         category_num = 0
         for category in self.all_shifts:
             for shift in category:
+
+                # Make sure there is a dict entry for row. (Used for possible sorted Dict way)
+                #print("Adding: ", shift.row)
+                #self.row_ce_count[shift.row] = 0
+
                 start_cell = self.translateHourToCell(shift.start_time)
                 end_cell = self.translateHourToCell(shift.end_time)
 
@@ -344,7 +357,7 @@ class ExcelWriter:
                         self.setPink(row + 2, excel_col, False)
 
         # Add any rows that either have 3 hours of CE or less than 2 hours to respective lists.
-        for row in range(self.last_manager_row, self.num_employees):
+        for row in range(self.last_manager_row, self.num_employees+2):
             if self.reference_matrix[row][-1] >= 3:
                 hasThreeHours.append(row)
             elif self.reference_matrix[row][-1] < 2:
@@ -371,6 +384,9 @@ class ExcelWriter:
                     break
         '''
 
+        print("Time: ", time.time())
+        timeout = time.time() + 5
+        print("Timeout: ", timeout)
         while len(lessThanTwoHours) != 0:
             for adding_row in lessThanTwoHours:
                 row_was_set = False
@@ -393,17 +409,40 @@ class ExcelWriter:
                                     hasThreeHours.remove(removing_row)
                                     row_was_set = True
                                     break
+                                if time.time() > timeout:
+                                    print("Timeout, Exiting loop")
+                                    break
                         if row_was_set:
                             break
-
+                        if time.time() > timeout:
+                            print("Timeout, Exiting loop")
+                            break
+                    if time.time() > timeout:
+                        print("Timeout, Exiting loop")
+                        break
+                if time.time() > timeout:
+                    print("Timeout, Exiting loop")
+                    break
+            if time.time() > timeout:
+                print("Timeout, Exiting loop")
+                break
         print("less than: ", len(lessThanTwoHours))
         print("has three: ", len(hasThreeHours))
 
         self.new_book.save(self.save_file_name)
-        print(self.reference_matrix)
         pass
+        
 
+        # Get rid of patches of too much PT
+        for row in range(self.last_manager_row, self.num_employees+1):
+            for col in range(0, 13):
+                print("Testing: ", (row, col))
+                (threeInRow, placing_col) = self.threePinkInRow(row, col)
+                if threeInRow:
+                    print("Too Much Setting at ", (row, placing_col))
+                    self.setYellow(row+2, self.translateHourToCell(placing_col + 8))
 
+        self.new_book.save(self.save_file_name)
 
     def test_colorCells(self):
         last_time_recorded = 0
@@ -483,11 +522,9 @@ class ExcelWriter:
                 ##### Reference matrix's rows are 0 based index where excel is base 2.
                 if row > self.last_manager_row:
                     if first_scheduled_list[reference_col] == -1 and colour_index != 22:
-                        print("Setting First: ", row)
                         first_scheduled_list[reference_col] = row - 2
                     if first_scheduled_list[reference_col] != -1 and last_scheduled_list[reference_col] == -1 and \
                             last_scheduled_list[reference_col-1] < row and colour_index == 22:
-                        print("Setting Last")
                         last_scheduled_list[reference_col] = row -2
                     if last_scheduled_list[reference_col] != -1 and colour_index != 22:
                         last_scheduled_list[reference_col] = -1
@@ -505,6 +542,8 @@ class ExcelWriter:
 
     def setReferenceCell(self, row, col, color):
         reference_col = int((col - 5) / 2)
+        if (reference_col > 13):
+            print("Wrong: ", row, col)
         self.reference_matrix[row-2][reference_col] = color
 
     def incrementReferenceCount(self, col):
@@ -562,21 +601,25 @@ class ExcelWriter:
             elif self.reference_matrix[row][col+1] == 'pink' and self.reference_matrix[row][col+2] == 'pink':
                 answer = True
         '''
-
-        if self.reference_matrix[row][col] == 'pink':
-            if self.reference_matrix[row][col +1] == 'pink' and self.reference_matrix[row][col+2] == 'pink':
-                answer = True
-                if self.reference_matrix[row][col-1] == 'top_lunch':
-                    placing_col = col + 1
-                elif self.reference_matrix[row][col-1] == 'bottom_lunch':
-                    placing_col = col
-                elif self.reference_matrix[row][col+3] == 'top_lunch':
-                    placing_col = col + 2
-                elif self.reference_matrix[row][col+3] == 'bottom_lunch':
-                    placing_col = col + 1
-                else:
-                    random_modifier = random.randint(0,1)
-                    placing_col = col + random_modifier
+        try:
+            if self.reference_matrix[row][col] == 'pink' and 0 < col < len(self.reference_matrix[0])-4:
+                if self.reference_matrix[row][col +1] == 'pink' and self.reference_matrix[row][col+2] == 'pink':
+                    answer = True
+                    if self.reference_matrix[row][col-1] == 'top_lunch':
+                        placing_col = col + 1
+                    elif self.reference_matrix[row][col-1] == 'bottom_lunch':
+                        placing_col = col
+                    elif self.reference_matrix[row][col+3] == 'top_lunch':
+                        placing_col = col + 2
+                    elif self.reference_matrix[row][col+3] == 'bottom_lunch':
+                        placing_col = col + 1
+                    else:
+                        random_modifier = random.randint(0,1)
+                        if placing_col == 12:
+                            random_modifier = 0
+                        placing_col = col + random_modifier
+        except:
+            print("Index was out of range")
         return (answer, placing_col)
 
 

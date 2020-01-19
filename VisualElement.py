@@ -166,7 +166,7 @@ class VisualTable(QDialog):
 
         # Iterate over every cell, col first, row second.
         for i in range(5, 30, 2):
-            for row in range(3, self.numEmployees[0] + 3):
+            for row in range(2, self.numEmployees[0] + 2):
                 # Extracting style information to obtain background colour of cell.
                 xf_left = self.new_sheet.cell_xf_index(row, i)
                 xf_next_left = self.read_schedule.xf_list[xf_left]
@@ -197,10 +197,10 @@ class VisualTable(QDialog):
                         self.numberOfCE[col-1] += 1
                     elif colour_index_left == 22:
                         cell_item.setBackground(QColor(self.grey[0], self.grey[1], self.grey[2]))
-                    self.tableWidget.setItem(row, col, cell_item)
+                    self.tableWidget.setItem(row+1, col, cell_item)
                 else:
                     cell_item.setBackground(QColor(self.grey[0], self.grey[1], self.grey[2]))
-                    self.tableWidget.setItem(row, col, cell_item)
+                    self.tableWidget.setItem(row+1, col, cell_item)
                 '''
 
                 else:
