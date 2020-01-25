@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QHeaderView, QLabel, QDialog, QWidget, QPushButton, QMainWindow, QAbstractItemView, QTableWidget, QTableWidgetItem, QGridLayout, QVBoxLayout, QComboBox, QFileDialog
-from PyQt5.QtGui import QColor, QPalette, QFont
+from PyQt5.QtWidgets import QHeaderView, QLabel, QDialog, QWidget, QPushButton, QMainWindow, QAbstractItemView, QTableWidget, QTableWidgetItem, QGridLayout, QVBoxLayout, QComboBox, QFileDialog, QMenu, QAction
+from PyQt5.QtGui import QColor, QPalette, QFont, QCursor
 from PyQt5.QtCore import QSize, Qt, QTimer
 import datetime
 import keyboard
@@ -39,6 +39,7 @@ class VisualTable(QDialog):
         self.clock.timeout.connect(self.handleClicks)
         self.cellClicked = 0
         self.last_manager_row = 0
+        self.cursor_pos = 0
 
         self.read_schedule = xlrd.open_workbook(filename=new_filename, formatting_info=True, on_demand=True)
         self.write_schedule = copy(self.read_schedule)
@@ -159,7 +160,7 @@ class VisualTable(QDialog):
         self.exec_()
         self.tableWidget.show()
 
-
+    # Copies all cell colors from the newly colored excel file into the editing table.
     def copyCellColors(self):
         # Colour indexes ----- Pink: 45    Yellow: 43
         col = 1
@@ -210,7 +211,7 @@ class VisualTable(QDialog):
 
             col += 1
 
-
+    # Saves any altered cells back to the excel file. Called when save button is clicked.
     def saveToExcel(self, write_sheet):
         # Upadate the excel file with all updated cells in editor.
         for index in self.updatedRows:
@@ -235,7 +236,7 @@ class VisualTable(QDialog):
             write_sheet.write(self.numEmployees[0]+4, col+1, '', style_right)
             ce_list_index += 1
 
-
+    # Method helps distinguish between single and double clicks
     def clickedCell(self, cell):
         self.numberOfClicks += 1
         self.cellClicked = cell
@@ -355,5 +356,45 @@ class VisualTable(QDialog):
         print("Button Pressed")
         self.close()
 
+    # Sets up right click menu.
+    def contextMenuEvent(self, event):
+        self.menu = QMenu(self)
+
+        leftLunchAction = QAction('Change Lunch To Top of Hour', self)
+        leftLunchAction.triggered.connect(lambda: self.changeToTopHourLunch(event))
+
+        rightLunchAction = QAction('Change Lunch To Bottom of Hour', self)
+        rightLunchAction.triggered.connect(lambda: self.changeToBottomHourLunch(event))
+
+        print("New: ", event)
+        self.cursor_pos = QCursor.pos()
+        self.menu.addAction(leftLunchAction)
+        self.menu.addAction(rightLunchAction)
+        self.menu.popup(self.cursor_pos)
+
+    # Both methods handle relative option chosen from right click menu.
+    def changeToTopHourLunch(self, event):
+        row = self.tableWidget.rowAt(self.cursor_pos.y())-4
+        col = self.tableWidget.columnAt(self.cursor_pos.x())-2
+        self.deletePreviousLunch(row)
+
+        # Now put lunch at top of hour of selected cell. Add to list of updated lunches.
+        self.tableWidget.item(row, col).setText('L')
+        self.tableWidget.item(row, col).setTextAlignment(1)
+
+    def changeToBottomHourLunch(self, event):
+        row = self.tableWidget.rowAt(self.cursor_pos.y())-4
+        col = self.tableWidget.columnAt(self.cursor_pos.x())-2
+        self.deletePreviousLunch(row)
+
+        # Now put lunch at top of hour of selected cell. Add to list of updated lunches.
+        self.tableWidget.item(row, col).setText('L')
+        self.tableWidget.item(row, col).setTextAlignment(2)
+
+    def deletePreviousLunch(self, row):
+        # Iterate through columns to find last lunch position. Clear this position.
+        for col in range(1, self.tableWidget.columnCount()):
+            if self.tableWidget.item(row, col).text() == 'L':
+                self.tableWidget.item(row, col).setText('')
 
 
