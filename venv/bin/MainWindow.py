@@ -1,66 +1,56 @@
-from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QGridLayout, QComboBox, QFileDialog, QLineEdit, QDialog, QVBoxLayout, QHBoxLayout
-from PyQt5.QtCore import QRect, QMetaObject, QCoreApplication, Qt
-from PyQt5.QtGui import QFont
-from ExcelWriter import ExcelWriter
-from VisualElement import VisualTable
-from xlutils.copy import copy
-from xlutils.styles import Styles
-import xlrd
+# -*- coding: utf-8 -*-
 
-class MainIntroWindow(QDialog):
+# Form implementation generated from reading ui file 'MainWindowPyQt.ui'
+#
+# Created by: PyQt5 UI code generator 5.12.3
+#
+# WARNING! All changes made in this file will be lost!
 
-    def __init__(self):
-        super().__init__()
-        self.original_filename = ''
-        self.new_save_filename = ''
-        self.default_open_path = "/Users/Patrick/Desktop/TradersSchedule/test.xls"
-        self.default_save_path = "/Users/Patrick/Desktop/TradersSchedule/new_schedule.xls"
-        self.open_file_found = False
-        self.save_file_found = False
-        self.day_index = 0
-        self.recommended_ce = [6, 9, 10, 11, 11, 11, 10, 11, 12, 13, 13, 11, 9]
-        self.setupUi(self)
 
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+
+class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(610, 454)
-        self.widget = QWidget(MainWindow)
-        self.widget.setGeometry(QRect(10, 20, 581, 78))
+        self.widget = QtWidgets.QWidget(MainWindow)
+        self.widget.setGeometry(QtCore.QRect(10, 20, 581, 78))
         self.widget.setObjectName("widget")
-        self.verticalLayout_5 = QVBoxLayout(self.widget)
+        self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.widget)
         self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
-        self.horizontalLayout_3 = QHBoxLayout()
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
-        self.open_file_button = QPushButton(self.widget)
+        self.open_file_button = QtWidgets.QPushButton(self.widget)
         self.open_file_button.setObjectName("open_file_button")
         self.horizontalLayout_3.addWidget(self.open_file_button)
-        self.lineEdit = QLineEdit(self.widget)
+        self.lineEdit = QtWidgets.QLineEdit(self.widget)
         self.lineEdit.setObjectName("lineEdit")
         self.horizontalLayout_3.addWidget(self.lineEdit)
         self.verticalLayout_5.addLayout(self.horizontalLayout_3)
-        self.horizontalLayout_4 = QHBoxLayout()
+        self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
-        self.set_save_file_button = QPushButton(self.widget)
+        self.set_save_file_button = QtWidgets.QPushButton(self.widget)
         self.set_save_file_button.setObjectName("set_save_file_button")
         self.horizontalLayout_4.addWidget(self.set_save_file_button)
-        self.lineEdit_2 = QLineEdit(self.widget)
+        self.lineEdit_2 = QtWidgets.QLineEdit(self.widget)
         self.lineEdit_2.setObjectName("lineEdit_2")
         self.horizontalLayout_4.addWidget(self.lineEdit_2)
         self.verticalLayout_5.addLayout(self.horizontalLayout_4)
-        self.run_program_button = QPushButton(MainWindow)
-        self.run_program_button.setGeometry(QRect(230, 400, 141, 32))
+        self.run_program_button = QtWidgets.QPushButton(MainWindow)
+        self.run_program_button.setGeometry(QtCore.QRect(230, 400, 141, 32))
         self.run_program_button.setObjectName("run_program_button")
-        self.widget1 = QWidget(MainWindow)
-        self.widget1.setGeometry(QRect(200, 110, 210, 26))
+        self.widget1 = QtWidgets.QWidget(MainWindow)
+        self.widget1.setGeometry(QtCore.QRect(200, 110, 210, 26))
         self.widget1.setObjectName("widget1")
-        self.horizontalLayout_5 = QHBoxLayout(self.widget1)
+        self.horizontalLayout_5 = QtWidgets.QHBoxLayout(self.widget1)
         self.horizontalLayout_5.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
-        self.label_15 = QLabel(self.widget1)
+        self.label_15 = QtWidgets.QLabel(self.widget1)
         self.label_15.setObjectName("label_15")
         self.horizontalLayout_5.addWidget(self.label_15)
-        self.day_selector = QComboBox(self.widget1)
+        self.day_selector = QtWidgets.QComboBox(self.widget1)
         self.day_selector.setObjectName("day_selector")
         self.day_selector.addItem("")
         self.day_selector.addItem("")
@@ -70,83 +60,82 @@ class MainIntroWindow(QDialog):
         self.day_selector.addItem("")
         self.day_selector.addItem("")
         self.horizontalLayout_5.addWidget(self.day_selector)
-        self.widget2 = QWidget(MainWindow)
-        self.widget2.setGeometry(QRect(170, 150, 259, 242))
+        self.widget2 = QtWidgets.QWidget(MainWindow)
+        self.widget2.setGeometry(QtCore.QRect(170, 150, 259, 242))
         self.widget2.setObjectName("widget2")
-        self.verticalLayout_6 = QVBoxLayout(self.widget2)
+        self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.widget2)
         self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_6.setObjectName("verticalLayout_6")
-        self.label_8 = QLabel(self.widget2)
-        font = QFont()
+        self.label_8 = QtWidgets.QLabel(self.widget2)
+        font = QtGui.QFont()
         font.setPointSize(17)
         self.label_8.setFont(font)
-        self.label_8.setAlignment(Qt.AlignCenter)
+        self.label_8.setAlignment(QtCore.Qt.AlignCenter)
         self.label_8.setObjectName("label_8")
         self.verticalLayout_6.addWidget(self.label_8)
-        self.horizontalLayout_6 = QHBoxLayout()
+        self.horizontalLayout_6 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_6.setObjectName("horizontalLayout_6")
-        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.verticalLayout_2 = QVBoxLayout()
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout()
         self.verticalLayout_2.setObjectName("verticalLayout_2")
-        self.label = QLabel(self.widget2)
-        self.label.setAlignment(Qt.AlignCenter)
+        self.label = QtWidgets.QLabel(self.widget2)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setObjectName("label")
         self.verticalLayout_2.addWidget(self.label)
-        self.label_2 = QLabel(self.widget2)
-        self.label_2.setAlignment(Qt.AlignCenter)
+        self.label_2 = QtWidgets.QLabel(self.widget2)
+        self.label_2.setAlignment(QtCore.Qt.AlignCenter)
         self.label_2.setObjectName("label_2")
         self.verticalLayout_2.addWidget(self.label_2)
-        self.label_3 = QLabel(self.widget2)
-        self.label_3.setAlignment(Qt.AlignCenter)
+        self.label_3 = QtWidgets.QLabel(self.widget2)
+        self.label_3.setAlignment(QtCore.Qt.AlignCenter)
         self.label_3.setObjectName("label_3")
         self.verticalLayout_2.addWidget(self.label_3)
-        self.label_4 = QLabel(self.widget2)
-        self.label_4.setAlignment(Qt.AlignCenter)
+        self.label_4 = QtWidgets.QLabel(self.widget2)
+        self.label_4.setAlignment(QtCore.Qt.AlignCenter)
         self.label_4.setObjectName("label_4")
         self.verticalLayout_2.addWidget(self.label_4)
-        self.label_5 = QLabel(self.widget2)
-        self.label_5.setAlignment(Qt.AlignCenter)
+        self.label_5 = QtWidgets.QLabel(self.widget2)
+        self.label_5.setAlignment(QtCore.Qt.AlignCenter)
         self.label_5.setObjectName("label_5")
         self.verticalLayout_2.addWidget(self.label_5)
-        self.label_7 = QLabel(self.widget2)
-        self.label_7.setAlignment(Qt.AlignCenter)
+        self.label_7 = QtWidgets.QLabel(self.widget2)
+        self.label_7.setAlignment(QtCore.Qt.AlignCenter)
         self.label_7.setObjectName("label_7")
         self.verticalLayout_2.addWidget(self.label_7)
-        self.label_6 = QLabel(self.widget2)
-        self.label_6.setAlignment(Qt.AlignCenter)
+        self.label_6 = QtWidgets.QLabel(self.widget2)
+        self.label_6.setAlignment(QtCore.Qt.AlignCenter)
         self.label_6.setObjectName("label_6")
         self.verticalLayout_2.addWidget(self.label_6)
         self.horizontalLayout.addLayout(self.verticalLayout_2)
-        self.verticalLayout = QVBoxLayout()
+        self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
-        self.mon_ce_count = QComboBox(self.widget2)
-        self.mon_ce_count.setEditable(False)
-        self.mon_ce_count.setObjectName("comboBox_2")
-        self.mon_ce_count.addItem("")
-        self.mon_ce_count.addItem("")
-        self.mon_ce_count.addItem("")
-        self.mon_ce_count.addItem("")
-        self.mon_ce_count.addItem("")
-        self.mon_ce_count.addItem("")
-        self.mon_ce_count.addItem("")
-        self.mon_ce_count.addItem("")
-        self.mon_ce_count.addItem("")
-        self.mon_ce_count.addItem("")
-        self.mon_ce_count.addItem("")
-        self.mon_ce_count.addItem("")
-        self.mon_ce_count.addItem("")
-        self.mon_ce_count.addItem("")
-        self.mon_ce_count.addItem("")
-        self.mon_ce_count.addItem("")
-        self.mon_ce_count.addItem("")
-        self.mon_ce_count.addItem("")
-        self.mon_ce_count.addItem("")
-        self.mon_ce_count.addItem("")
-        self.mon_ce_count.addItem("")
-        self.mon_ce_count.setCurrentIndex(self.recommended_ce[0])
-        self.verticalLayout.addWidget(self.mon_ce_count)
-        self.comboBox_6 = QComboBox(self.widget2)
+        self.comboBox_2 = QtWidgets.QComboBox(self.widget2)
+        self.comboBox_2.setEditable(False)
+        self.comboBox_2.setObjectName("comboBox_2")
+        self.comboBox_2.addItem("")
+        self.comboBox_2.addItem("")
+        self.comboBox_2.addItem("")
+        self.comboBox_2.addItem("")
+        self.comboBox_2.addItem("")
+        self.comboBox_2.addItem("")
+        self.comboBox_2.addItem("")
+        self.comboBox_2.addItem("")
+        self.comboBox_2.addItem("")
+        self.comboBox_2.addItem("")
+        self.comboBox_2.addItem("")
+        self.comboBox_2.addItem("")
+        self.comboBox_2.addItem("")
+        self.comboBox_2.addItem("")
+        self.comboBox_2.addItem("")
+        self.comboBox_2.addItem("")
+        self.comboBox_2.addItem("")
+        self.comboBox_2.addItem("")
+        self.comboBox_2.addItem("")
+        self.comboBox_2.addItem("")
+        self.comboBox_2.addItem("")
+        self.verticalLayout.addWidget(self.comboBox_2)
+        self.comboBox_6 = QtWidgets.QComboBox(self.widget2)
         self.comboBox_6.setEditable(False)
         self.comboBox_6.setObjectName("comboBox_6")
         self.comboBox_6.addItem("")
@@ -171,7 +160,7 @@ class MainIntroWindow(QDialog):
         self.comboBox_6.addItem("")
         self.comboBox_6.addItem("")
         self.verticalLayout.addWidget(self.comboBox_6)
-        self.comboBox_4 = QComboBox(self.widget2)
+        self.comboBox_4 = QtWidgets.QComboBox(self.widget2)
         self.comboBox_4.setEditable(False)
         self.comboBox_4.setObjectName("comboBox_4")
         self.comboBox_4.addItem("")
@@ -196,7 +185,7 @@ class MainIntroWindow(QDialog):
         self.comboBox_4.addItem("")
         self.comboBox_4.addItem("")
         self.verticalLayout.addWidget(self.comboBox_4)
-        self.comboBox_7 = QComboBox(self.widget2)
+        self.comboBox_7 = QtWidgets.QComboBox(self.widget2)
         self.comboBox_7.setEditable(False)
         self.comboBox_7.setObjectName("comboBox_7")
         self.comboBox_7.addItem("")
@@ -221,7 +210,7 @@ class MainIntroWindow(QDialog):
         self.comboBox_7.addItem("")
         self.comboBox_7.addItem("")
         self.verticalLayout.addWidget(self.comboBox_7)
-        self.comboBox_3 = QComboBox(self.widget2)
+        self.comboBox_3 = QtWidgets.QComboBox(self.widget2)
         self.comboBox_3.setEditable(False)
         self.comboBox_3.setObjectName("comboBox_3")
         self.comboBox_3.addItem("")
@@ -246,7 +235,7 @@ class MainIntroWindow(QDialog):
         self.comboBox_3.addItem("")
         self.comboBox_3.addItem("")
         self.verticalLayout.addWidget(self.comboBox_3)
-        self.comboBox_5 = QComboBox(self.widget2)
+        self.comboBox_5 = QtWidgets.QComboBox(self.widget2)
         self.comboBox_5.setEditable(False)
         self.comboBox_5.setObjectName("comboBox_5")
         self.comboBox_5.addItem("")
@@ -271,7 +260,7 @@ class MainIntroWindow(QDialog):
         self.comboBox_5.addItem("")
         self.comboBox_5.addItem("")
         self.verticalLayout.addWidget(self.comboBox_5)
-        self.comboBox_8 = QComboBox(self.widget2)
+        self.comboBox_8 = QtWidgets.QComboBox(self.widget2)
         self.comboBox_8.setEditable(False)
         self.comboBox_8.setObjectName("comboBox_8")
         self.comboBox_8.addItem("")
@@ -298,38 +287,38 @@ class MainIntroWindow(QDialog):
         self.verticalLayout.addWidget(self.comboBox_8)
         self.horizontalLayout.addLayout(self.verticalLayout)
         self.horizontalLayout_6.addLayout(self.horizontalLayout)
-        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.verticalLayout_3 = QVBoxLayout()
+        self.verticalLayout_3 = QtWidgets.QVBoxLayout()
         self.verticalLayout_3.setObjectName("verticalLayout_3")
-        self.label_14 = QLabel(self.widget2)
-        self.label_14.setAlignment(Qt.AlignCenter)
+        self.label_14 = QtWidgets.QLabel(self.widget2)
+        self.label_14.setAlignment(QtCore.Qt.AlignCenter)
         self.label_14.setObjectName("label_14")
         self.verticalLayout_3.addWidget(self.label_14)
-        self.label_13 = QLabel(self.widget2)
-        self.label_13.setAlignment(Qt.AlignCenter)
+        self.label_13 = QtWidgets.QLabel(self.widget2)
+        self.label_13.setAlignment(QtCore.Qt.AlignCenter)
         self.label_13.setObjectName("label_13")
         self.verticalLayout_3.addWidget(self.label_13)
-        self.label_11 = QLabel(self.widget2)
-        self.label_11.setAlignment(Qt.AlignCenter)
+        self.label_11 = QtWidgets.QLabel(self.widget2)
+        self.label_11.setAlignment(QtCore.Qt.AlignCenter)
         self.label_11.setObjectName("label_11")
         self.verticalLayout_3.addWidget(self.label_11)
-        self.label_10 = QLabel(self.widget2)
-        self.label_10.setAlignment(Qt.AlignCenter)
+        self.label_10 = QtWidgets.QLabel(self.widget2)
+        self.label_10.setAlignment(QtCore.Qt.AlignCenter)
         self.label_10.setObjectName("label_10")
         self.verticalLayout_3.addWidget(self.label_10)
-        self.label_9 = QLabel(self.widget2)
-        self.label_9.setAlignment(Qt.AlignCenter)
+        self.label_9 = QtWidgets.QLabel(self.widget2)
+        self.label_9.setAlignment(QtCore.Qt.AlignCenter)
         self.label_9.setObjectName("label_9")
         self.verticalLayout_3.addWidget(self.label_9)
-        self.label_12 = QLabel(self.widget2)
-        self.label_12.setAlignment(Qt.AlignCenter)
+        self.label_12 = QtWidgets.QLabel(self.widget2)
+        self.label_12.setAlignment(QtCore.Qt.AlignCenter)
         self.label_12.setObjectName("label_12")
         self.verticalLayout_3.addWidget(self.label_12)
         self.horizontalLayout_2.addLayout(self.verticalLayout_3)
-        self.verticalLayout_4 = QVBoxLayout()
+        self.verticalLayout_4 = QtWidgets.QVBoxLayout()
         self.verticalLayout_4.setObjectName("verticalLayout_4")
-        self.comboBox = QComboBox(self.widget2)
+        self.comboBox = QtWidgets.QComboBox(self.widget2)
         self.comboBox.setEditable(False)
         self.comboBox.setObjectName("comboBox")
         self.comboBox.addItem("")
@@ -354,7 +343,7 @@ class MainIntroWindow(QDialog):
         self.comboBox.addItem("")
         self.comboBox.addItem("")
         self.verticalLayout_4.addWidget(self.comboBox)
-        self.comboBox_11 = QComboBox(self.widget2)
+        self.comboBox_11 = QtWidgets.QComboBox(self.widget2)
         self.comboBox_11.setEditable(False)
         self.comboBox_11.setObjectName("comboBox_11")
         self.comboBox_11.addItem("")
@@ -379,7 +368,7 @@ class MainIntroWindow(QDialog):
         self.comboBox_11.addItem("")
         self.comboBox_11.addItem("")
         self.verticalLayout_4.addWidget(self.comboBox_11)
-        self.comboBox_10 = QComboBox(self.widget2)
+        self.comboBox_10 = QtWidgets.QComboBox(self.widget2)
         self.comboBox_10.setEditable(False)
         self.comboBox_10.setObjectName("comboBox_10")
         self.comboBox_10.addItem("")
@@ -404,7 +393,7 @@ class MainIntroWindow(QDialog):
         self.comboBox_10.addItem("")
         self.comboBox_10.addItem("")
         self.verticalLayout_4.addWidget(self.comboBox_10)
-        self.comboBox_12 = QComboBox(self.widget2)
+        self.comboBox_12 = QtWidgets.QComboBox(self.widget2)
         self.comboBox_12.setEditable(False)
         self.comboBox_12.setObjectName("comboBox_12")
         self.comboBox_12.addItem("")
@@ -429,7 +418,7 @@ class MainIntroWindow(QDialog):
         self.comboBox_12.addItem("")
         self.comboBox_12.addItem("")
         self.verticalLayout_4.addWidget(self.comboBox_12)
-        self.comboBox_9 = QComboBox(self.widget2)
+        self.comboBox_9 = QtWidgets.QComboBox(self.widget2)
         self.comboBox_9.setEditable(False)
         self.comboBox_9.setObjectName("comboBox_9")
         self.comboBox_9.addItem("")
@@ -454,7 +443,7 @@ class MainIntroWindow(QDialog):
         self.comboBox_9.addItem("")
         self.comboBox_9.addItem("")
         self.verticalLayout_4.addWidget(self.comboBox_9)
-        self.comboBox_13 = QComboBox(self.widget2)
+        self.comboBox_13 = QtWidgets.QComboBox(self.widget2)
         self.comboBox_13.setEditable(False)
         self.comboBox_13.setObjectName("comboBox_13")
         self.comboBox_13.addItem("")
@@ -484,7 +473,7 @@ class MainIntroWindow(QDialog):
         self.verticalLayout_6.addLayout(self.horizontalLayout_6)
         self.label.raise_()
         self.comboBox.raise_()
-        self.mon_ce_count.raise_()
+        self.comboBox_2.raise_()
         self.comboBox_3.raise_()
         self.comboBox_4.raise_()
         self.comboBox_5.raise_()
@@ -517,28 +506,11 @@ class MainIntroWindow(QDialog):
         self.day_selector.raise_()
         self.run_program_button.raise_()
 
-        # Set up default file parameters
-        self.original_filename = self.default_open_path
-        self.lineEdit.setText(self.original_filename)
-        if self.original_filename:
-            self.open_file_found = True
-        self.new_save_filename = self.default_save_path
-        self.lineEdit_2.setText(self.new_save_filename)
-        if self.new_save_filename:
-            self.save_file_found = True
-
-        if self.open_file_found and self.save_file_found:
-            self.run_program_button.setDisabled(False)
-        else:
-            self.run_program_button.setDisabled(True)
-
-
         self.retranslateUi(MainWindow)
-        QMetaObject.connectSlotsByName(MainWindow)
-        self.show()
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
-        _translate = QCoreApplication.translate
+        _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Trader\'s Scheduler"))
         self.open_file_button.setText(_translate("MainWindow", "Choose Original Filename"))
         self.set_save_file_button.setText(_translate("MainWindow", "Choose New Filename"))
@@ -559,28 +531,28 @@ class MainIntroWindow(QDialog):
         self.label_5.setText(_translate("MainWindow", "12 p.m"))
         self.label_7.setText(_translate("MainWindow", "2 p.m"))
         self.label_6.setText(_translate("MainWindow", "1 p.m"))
-        self.mon_ce_count.setCurrentText(_translate("MainWindow", "0"))
-        self.mon_ce_count.setItemText(0, _translate("MainWindow", "0"))
-        self.mon_ce_count.setItemText(1, _translate("MainWindow", "1"))
-        self.mon_ce_count.setItemText(2, _translate("MainWindow", "2"))
-        self.mon_ce_count.setItemText(3, _translate("MainWindow", "3"))
-        self.mon_ce_count.setItemText(4, _translate("MainWindow", "4"))
-        self.mon_ce_count.setItemText(5, _translate("MainWindow", "5"))
-        self.mon_ce_count.setItemText(6, _translate("MainWindow", "6"))
-        self.mon_ce_count.setItemText(7, _translate("MainWindow", "7"))
-        self.mon_ce_count.setItemText(8, _translate("MainWindow", "8"))
-        self.mon_ce_count.setItemText(9, _translate("MainWindow", "9"))
-        self.mon_ce_count.setItemText(10, _translate("MainWindow", "10"))
-        self.mon_ce_count.setItemText(11, _translate("MainWindow", "11"))
-        self.mon_ce_count.setItemText(12, _translate("MainWindow", "12"))
-        self.mon_ce_count.setItemText(13, _translate("MainWindow", "13"))
-        self.mon_ce_count.setItemText(14, _translate("MainWindow", "14"))
-        self.mon_ce_count.setItemText(15, _translate("MainWindow", "15"))
-        self.mon_ce_count.setItemText(16, _translate("MainWindow", "16"))
-        self.mon_ce_count.setItemText(17, _translate("MainWindow", "17"))
-        self.mon_ce_count.setItemText(18, _translate("MainWindow", "18"))
-        self.mon_ce_count.setItemText(19, _translate("MainWindow", "19"))
-        self.mon_ce_count.setItemText(20, _translate("MainWindow", "20"))
+        self.comboBox_2.setCurrentText(_translate("MainWindow", "0"))
+        self.comboBox_2.setItemText(0, _translate("MainWindow", "0"))
+        self.comboBox_2.setItemText(1, _translate("MainWindow", "1"))
+        self.comboBox_2.setItemText(2, _translate("MainWindow", "2"))
+        self.comboBox_2.setItemText(3, _translate("MainWindow", "3"))
+        self.comboBox_2.setItemText(4, _translate("MainWindow", "4"))
+        self.comboBox_2.setItemText(5, _translate("MainWindow", "5"))
+        self.comboBox_2.setItemText(6, _translate("MainWindow", "6"))
+        self.comboBox_2.setItemText(7, _translate("MainWindow", "7"))
+        self.comboBox_2.setItemText(8, _translate("MainWindow", "8"))
+        self.comboBox_2.setItemText(9, _translate("MainWindow", "9"))
+        self.comboBox_2.setItemText(10, _translate("MainWindow", "10"))
+        self.comboBox_2.setItemText(11, _translate("MainWindow", "11"))
+        self.comboBox_2.setItemText(12, _translate("MainWindow", "12"))
+        self.comboBox_2.setItemText(13, _translate("MainWindow", "13"))
+        self.comboBox_2.setItemText(14, _translate("MainWindow", "14"))
+        self.comboBox_2.setItemText(15, _translate("MainWindow", "15"))
+        self.comboBox_2.setItemText(16, _translate("MainWindow", "16"))
+        self.comboBox_2.setItemText(17, _translate("MainWindow", "17"))
+        self.comboBox_2.setItemText(18, _translate("MainWindow", "18"))
+        self.comboBox_2.setItemText(19, _translate("MainWindow", "19"))
+        self.comboBox_2.setItemText(20, _translate("MainWindow", "20"))
         self.comboBox_6.setCurrentText(_translate("MainWindow", "0"))
         self.comboBox_6.setItemText(0, _translate("MainWindow", "0"))
         self.comboBox_6.setItemText(1, _translate("MainWindow", "1"))
@@ -853,136 +825,11 @@ class MainIntroWindow(QDialog):
         self.comboBox_13.setItemText(20, _translate("MainWindow", "20"))
 
 
-    def temp_setupUi(self, Dialog):
-        self.setWindowTitle("Trader's Scheduler")
-        Dialog.resize(574, 270)
-        self.day_selector = QComboBox(Dialog)
-        self.day_selector.setGeometry(QRect(250, 80, 121, 26))
-        self.day_selector.setEditable(False)
-        self.day_selector.setCurrentText("")
-        self.day_selector.setObjectName("day_selector")
-        self.day_selector.addItems(["Monday", "Tuesday", "Wednesday", "Thursday",
-                                    "Friday", "Saturday", "Sunday", "All"])
-        self.label = QLabel(Dialog)
-        self.label.setGeometry(QRect(170, 80, 81, 20))
-        self.label.setObjectName("label")
-        self.open_file_button = QPushButton(Dialog)
-        self.open_file_button.setGeometry(QRect(30, 120, 191, 31))
-        self.open_file_button.setParent(Dialog)
-        self.open_file_button.setObjectName("open_file_button")
-        self.open_file_button.clicked.connect(self.handleOpenFileButtonClick)
-        self.lineEdit = QLineEdit(Dialog)
-        self.lineEdit.setGeometry(QRect(220, 125, 300, 21))
-        self.lineEdit.setReadOnly(True)
-        self.lineEdit.setObjectName("lineEdit")
-        self.lineEdit_2 = QLineEdit(Dialog)
-        self.lineEdit_2.setGeometry(QRect(220, 155, 300, 21))
-        self.lineEdit_2.setObjectName("lineEdit_2")
-        self.set_save_file_button = QPushButton(Dialog)
-        self.set_save_file_button.setGeometry(QRect(50, 150, 171, 31))
-        self.set_save_file_button.setObjectName("set_save_file_button")
-        self.set_save_file_button.clicked.connect(self.handleSaveFileButtonClick)
-        self.run_program_button = QPushButton(Dialog)
-        self.run_program_button.setGeometry(QRect(220, 190, 144, 32))
-        self.run_program_button.setObjectName("run_program_button")
-        self.run_program_button.clicked.connect(self.runProgram)
-        self.run_program_button.setDisabled(True)
-
-        # Set up default file parameters
-        self.original_filename = self.default_open_path
-        self.lineEdit.setText(self.original_filename)
-        if self.original_filename:
-            self.open_file_found = True
-        self.new_save_filename = self.default_save_path
-        self.lineEdit_2.setText(self.new_save_filename)
-        if self.new_save_filename:
-            self.save_file_found = True
-
-        if self.open_file_found and self.save_file_found:
-            self.run_program_button.setDisabled(False)
-        else:
-            self.run_program_button.setDisabled(True)
-
-        self.retranslateUi(Dialog)
-        QMetaObject.connectSlotsByName(Dialog)
-        self.show()
-
-    def temp_retranslateUi(self, Dialog):
-        _translate = QCoreApplication.translate
-        self.label.setText(_translate("Dialog", "Select a Day:"))
-        self.open_file_button.setText(_translate("Dialog", "Choose Original Filename:"))
-        self.set_save_file_button.setText(_translate("Dialog", "Choose New Filename:"))
-        self.run_program_button.setText(_translate("Dialog", "Set Up Schedule"))
-
-    def runProgram(self):
-        self.day_index = self.day_selector.currentIndex()
-
-        # Setup and copy workbook.
-        book = xlrd.open_workbook(filename=self.original_filename, formatting_info=True, on_demand=True)
-        new_schedule = copy(book)
-
-        excelWriter = ExcelWriter(book, new_schedule.get_sheet(self.day_index + 3),
-                                  book.sheet_by_index(self.day_index + 3),
-                                  new_schedule,
-                                  Styles(book), self.new_save_filename)
-
-        # Set break and lunch times in new excel file.
-        excelWriter.calcBreakTimes()
-        excelWriter.calcLunchTimes()
-
-        # Set up schedule (Color Cells)
-        #excelWriter.colorCells()
-
-        excelWriter.colorCells()
-
-        # This only used for original presentation purposes.
-        #excelWriter.test_colorCells()
-
-        # Open editing table.
-        ex = VisualTable(self.new_save_filename, excelWriter.calcNumEmployees(), self.day_index)
-        ex.createTable()
-
-        # Close opening main window.
-        self.close()
-
-    def handleOpenFileButtonClick(self):
-        file_dialog = QFileDialog()
-        file_dialog.move(300, 300)
-        options = file_dialog.Options()
-        options |= file_dialog.DontUseNativeDialog
-
-        self.original_filename, _ = file_dialog.getOpenFileName(self, "Choose a schedule", self.default_open_path, "Excel Files (*.xls)", options=options)
-        if self.original_filename:
-            self.open_file_found = True
-            self.lineEdit.setText(self.original_filename)
-        else:
-            self.open_file_found = False
-
-        if self.open_file_found and self.save_file_found:
-            self.run_program_button.setDisabled(False)
-        else:
-            self.run_program_button.setDisabled(True)
-
-    def handleSaveFileButtonClick(self):
-        file_dialog = QFileDialog()
-        file_dialog.move(300,300)
-        options = file_dialog.Options()
-        options |= file_dialog.DontUseNativeDialog
-
-        self.new_save_filename, _ = file_dialog.getSaveFileName(self, "Choose new filename", self.default_save_path, "Excel Files (*.xls)", options= options)
-        if self.new_save_filename[-4:] != ".xls":
-            self.new_save_filename = self.new_save_filename + ".xls"
-
-        if self.new_save_filename != ".xls":
-            self.save_file_found = True
-            self.lineEdit_2.setText(self.new_save_filename)
-        else:
-            self.save_file_found = False
-
-        if self.open_file_found and self.save_file_found:
-            self.run_program_button.setDisabled(False)
-        else:
-            self.run_program_button.setDisabled(True)
-
-    def handleDayIndexChanged(self, index):
-        self.day_index = index
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow = QtWidgets.QDialog()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
+    sys.exit(app.exec_())

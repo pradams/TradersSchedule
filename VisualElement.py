@@ -41,13 +41,17 @@ class VisualTable(QDialog):
         self.last_manager_row = 0
         self.cursor_pos = 0
 
+        # This list maintains updated rows. Lunch list maintains a pair (new_index, alignment)
+        self.updatedRows = set([])
+        self.updatedRowsLunch = {}
+        self.original_lunch_indexes = {}
+
         self.read_schedule = xlrd.open_workbook(filename=new_filename, formatting_info=True, on_demand=True)
         self.write_schedule = copy(self.read_schedule)
         self.new_sheet = self.read_schedule.get_sheet(day_index+3)
         self.numberOfCE = [0] * 13
         self.numberOfPT = [0] * 13
         self.numEmployees = numEmployees
-        self.updatedRows = set([])
         self.save_file_name = new_filename
         self.day_index = day_index
         self.col_width = 256 * 3
@@ -180,9 +184,13 @@ class VisualTable(QDialog):
                 if (self.new_sheet.cell(row, i).value == 'L'):
                     cell_item = QTableWidgetItem('L')
                     cell_item.setTextAlignment(1)
+                    self.original_lunch_indexes[row+1] = col
+                    print("Setting row/to col: ", (row+1, col))
                 elif (self.new_sheet.cell(row, i+1).value == 'L'):
                     cell_item = QTableWidgetItem('L')
                     cell_item.setTextAlignment(2)
+                    self.original_lunch_indexes[row + 1] = col
+                    print("Setting row/to col: ", (row + 1, col))
                 else:
                     cell_item = QTableWidgetItem('')
 
@@ -213,7 +221,13 @@ class VisualTable(QDialog):
 
     # Saves any altered cells back to the excel file. Called when save button is clicked.
     def saveToExcel(self, write_sheet):
-        # Upadate the excel file with all updated cells in editor.
+
+        # Update excel file with any changed lunches.
+        for new_lunch_row in self.updatedRowsLunch:
+            self.setLunch((new_lunch_row, self.updatedRowsLunch[new_lunch_row][0]), self.updatedRowsLunch[new_lunch_row][1],
+                          write_sheet)
+
+        # Update the excel file with all updated cells in editor.
         for index in self.updatedRows:
             cell_color = self.tableWidget.item(index[0], index[1]).background().color().getRgb()
 
@@ -224,6 +238,7 @@ class VisualTable(QDialog):
             else:
                 self.setYellow(index, write_sheet)
 
+
         # Print CE count numbers in excel file.
         style_main_label = xlwt.easyxf('pattern: pattern solid, fore_colour white; borders: left thin, right thin, top thin, bottom thin')
         write_sheet.write(self.numEmployees[0]+3, 0, 'Number of CE Members', style_main_label)
@@ -232,8 +247,8 @@ class VisualTable(QDialog):
         ce_list_index = 0
         for col in range(5, 30, 2):
             write_sheet.col(col).width = self.col_width
-            write_sheet.write(self.numEmployees[0]+4, col, self.numberOfCE[ce_list_index], style_left)
-            write_sheet.write(self.numEmployees[0]+4, col+1, '', style_right)
+            write_sheet.write(self.numEmployees[0]+3, col, self.numberOfCE[ce_list_index], style_left)
+            write_sheet.write(self.numEmployees[0]+3, col+1, '', style_right)
             ce_list_index += 1
 
     # Method helps distinguish between single and double clicks
@@ -251,51 +266,52 @@ class VisualTable(QDialog):
             clicked_cell = self.tableWidget.item(row, col)
             current_color = clicked_cell.background().color().getRgb()
 
-            if self.numberOfClicks == 1:
-                if current_color == self.grey:
-                    pass
+            if self.tableWidget.item(row, col).text() == '':
+                if self.numberOfClicks == 1:
+                    if current_color == self.grey:
+                        pass
 
-                elif current_color == self.pink:
-                    clicked_cell.setBackground(QColor(self.yellow[0], self.yellow[1],
-                                                          self.yellow[2]))
-                    self.updatedRows.add((row, col))
+                    elif current_color == self.pink:
+                        clicked_cell.setBackground(QColor(self.yellow[0], self.yellow[1],
+                                                              self.yellow[2]))
+                        self.updatedRows.add((row, col))
 
-                    # Checks if the cell belonged to manager to see if it should be included in CE Count.
-                    if row > self.last_manager_row:
-                        self.numberOfCE[col - 1] += 1
-                        self.numberOfPT[col - 1] -= 1
-                elif current_color == self.yellow:
-                    clicked_cell.setBackground(QColor(self.pink[0], self.pink[1],
-                                                          self.pink[2]))
-                    self.updatedRows.add((row, col))
-                    if row > self.last_manager_row:
-                        self.numberOfCE[col - 1] -= 1
-                        self.numberOfPT[col - 1] += 1
-                else:
-                    clicked_cell.setBackground(QColor(self.pink[0], self.pink[1],
-                                                          self.pink[2]))
-                    self.updatedRows.add((row, col))
-                    if row > self.last_manager_row:
-                        self.numberOfPT[col - 1] += 1
-
-            elif self.numberOfClicks == 2:
-                if current_color == self.grey:
-                    pass
-
-                else:
-                    clicked_cell.setBackground(QColor(self.green[0], self.green[1],
-                                                          self.green[2]))
-                    if current_color == self.yellow:
+                        # Checks if the cell belonged to manager to see if it should be included in CE Count.
+                        if row > self.last_manager_row:
+                            self.numberOfCE[col - 1] += 1
+                            self.numberOfPT[col - 1] -= 1
+                    elif current_color == self.yellow:
+                        clicked_cell.setBackground(QColor(self.pink[0], self.pink[1],
+                                                              self.pink[2]))
+                        self.updatedRows.add((row, col))
                         if row > self.last_manager_row:
                             self.numberOfCE[col - 1] -= 1
-                    elif current_color == self.pink:
+                            self.numberOfPT[col - 1] += 1
+                    else:
+                        clicked_cell.setBackground(QColor(self.pink[0], self.pink[1],
+                                                              self.pink[2]))
+                        self.updatedRows.add((row, col))
                         if row > self.last_manager_row:
-                            self.numberOfPT[col-1] -= 1
+                            self.numberOfPT[col - 1] += 1
 
-                    self.updatedRows.add((row, col))
+                elif self.numberOfClicks == 2:
+                    if current_color == self.grey:
+                        pass
 
-            self.updateCountLabels(col)
-            self.numberOfClicks = 0
+                    else:
+                        clicked_cell.setBackground(QColor(self.green[0], self.green[1],
+                                                              self.green[2]))
+                        if current_color == self.yellow:
+                            if row > self.last_manager_row:
+                                self.numberOfCE[col - 1] -= 1
+                        elif current_color == self.pink:
+                            if row > self.last_manager_row:
+                                self.numberOfPT[col-1] -= 1
+
+                        self.updatedRows.add((row, col))
+
+                self.updateCountLabels(col)
+                self.numberOfClicks = 0
 
         except Exception as e:
             print(e)
@@ -341,11 +357,28 @@ class VisualTable(QDialog):
     def setGreen(self, index, write_sheet):
         style = xlwt.easyxf(
             'pattern: pattern solid, fore_colour light_green; borders: left thin, top thin, bottom thin;')
-        write_sheet.write(index[0], (index[1] * 2) + 3, '', style)
+        write_sheet.write(index[0]-1, (index[1] * 2) + 3, '', style)
         style = xlwt.easyxf(
             'pattern: pattern solid, fore_colour light_green; borders: right thin, top thin, bottom thin;')
-        write_sheet.write(index[0], (index[1] * 2) + 4, '', style)
+        write_sheet.write(index[0]-1, (index[1] * 2) + 4, '', style)
 
+    # Sets lunch in excel file.
+    def setLunch(self, index, top, write_sheet):
+        style_left = xlwt.easyxf(
+            'pattern: pattern solid, fore_colour rose; borders: left thin, top thin, bottom thin;')
+        style_right = xlwt.easyxf(
+            'pattern: pattern solid, fore_colour rose; borders: right thin, top thin, bottom thin;')
+
+        # Get rid of original lunch.
+        write_sheet.write(index[0] - 1, (self.original_lunch_indexes[index[0]] * 2) + 3, '', style_left)
+        write_sheet.write(index[0] - 1, (self.original_lunch_indexes[index[0]] * 2) + 4, '', style_right)
+
+        if top:
+            write_sheet.write(index[0] - 1, (index[1] * 2) + 3, 'L', style_left)
+            write_sheet.write(index[0] - 1, (index[1] * 2) + 4, '', style_right)
+        else:
+            write_sheet.write(index[0] - 1, (index[1] * 2) + 3, '', style_left)
+            write_sheet.write(index[0] - 1, (index[1] * 2) + 4, 'L', style_right)
 
     # Handle situation where save button is clicked.
     # Should update the new schedule with edited cell colors.
@@ -382,6 +415,11 @@ class VisualTable(QDialog):
         self.tableWidget.item(row, col).setText('L')
         self.tableWidget.item(row, col).setTextAlignment(1)
 
+        self.colorPinkForLunch(row, col)
+
+        # Add new_index/ alignment pair to updatedRowsLunch dict. True stands for left(top), False stands for right(bottom)
+        self.updatedRowsLunch[row] = (col, True)
+
     def changeToBottomHourLunch(self, event):
         row = self.tableWidget.rowAt(self.cursor_pos.y())-4
         col = self.tableWidget.columnAt(self.cursor_pos.x())-2
@@ -390,6 +428,24 @@ class VisualTable(QDialog):
         # Now put lunch at top of hour of selected cell. Add to list of updated lunches.
         self.tableWidget.item(row, col).setText('L')
         self.tableWidget.item(row, col).setTextAlignment(2)
+
+        self.colorPinkForLunch(row, col)
+
+        # Add pair to updatedRowsLunch. See function above for details.
+        self.updatedRowsLunch[row] = (col, False)
+
+    def colorPinkForLunch(self, row, col):
+        current_cell = self.tableWidget.item(row,col)
+        cell_color = current_cell.background().color().getRgb()
+        if cell_color == self.yellow:
+            print("Changing to Pink")
+            current_cell.setBackground(QColor(self.pink[0], self.pink[1],
+                                              self.pink[2]))
+            self.numberOfCE[col-1] -= 1
+            self.numberOfPT[col-1] += 1
+            self.updateCountLabels(col)
+
+
 
     def deletePreviousLunch(self, row):
         # Iterate through columns to find last lunch position. Clear this position.
