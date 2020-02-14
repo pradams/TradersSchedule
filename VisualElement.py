@@ -1,14 +1,7 @@
-from PyQt5.QtWidgets import QHeaderView, QLabel, QDialog, QWidget, QPushButton, QMainWindow, QAbstractItemView, QTableWidget, QTableWidgetItem, QGridLayout, QVBoxLayout, QComboBox, QFileDialog, QMenu, QAction
-from PyQt5.QtGui import QColor, QPalette, QFont, QCursor
+from PyQt5.QtWidgets import QHeaderView, QDialog, QWidget, QPushButton, QAbstractItemView, QTableWidget, QTableWidgetItem, QVBoxLayout, QMenu, QAction
+from PyQt5.QtGui import QColor, QCursor
 from PyQt5.QtCore import QSize, Qt, QTimer
 import datetime
-import keyboard
-from time import sleep
-from ExcelWriter import ExcelWriter
-from xlutils.copy import copy
-from xlutils.styles import Styles
-
-
 import xlrd
 import xlwt
 from xlutils.copy import copy
@@ -39,6 +32,7 @@ class VisualTable(QDialog):
         self.clock.timeout.connect(self.handleClicks)
         self.cellClicked = 0
         self.last_manager_row = 0
+        self.last_manager_row_reached = False
         self.cursor_pos = 0
 
         # This list maintains updated rows. Lunch list maintains a pair (new_index, alignment)
@@ -118,9 +112,21 @@ class VisualTable(QDialog):
             if row % 2 != 0:
                 cell_item.setBackground(QColor(235,235,235))
             self.tableWidget.setItem(row+1, 0, cell_item)
-            if end_time[3] - start_time[3] > 8:
-                self.last_manager_row = row
 
+            emp_end = end_time[3]
+            emp_start = start_time[3]
+            if end_time[4] != 0:
+                emp_end += 0.5
+            if start_time[4] != 0:
+                emp_start += 0.5
+
+            print("Test: ", (row, (emp_end-emp_start)))
+            if emp_end - emp_start > 8 and not self.last_manager_row_reached:
+                self.last_manager_row = row+1
+            else:
+                self.last_manager_row_reached = True
+
+        print("Last: ", self.last_manager_row)
         # Set top row (title row) with hours of day.
         for col in range(1, 6):
             item = "  " + str(col+7) + "AM  "
@@ -163,6 +169,7 @@ class VisualTable(QDialog):
         self.setLayout(self.layout)
         self.exec_()
         self.tableWidget.show()
+        pass
 
     # Copies all cell colors from the newly colored excel file into the editing table.
     def copyCellColors(self):
@@ -185,12 +192,10 @@ class VisualTable(QDialog):
                     cell_item = QTableWidgetItem('L')
                     cell_item.setTextAlignment(1)
                     self.original_lunch_indexes[row+1] = col
-                    print("Setting row/to col: ", (row+1, col))
                 elif (self.new_sheet.cell(row, i+1).value == 'L'):
                     cell_item = QTableWidgetItem('L')
                     cell_item.setTextAlignment(2)
                     self.original_lunch_indexes[row + 1] = col
-                    print("Setting row/to col: ", (row + 1, col))
                 else:
                     cell_item = QTableWidgetItem('')
 
@@ -200,7 +205,8 @@ class VisualTable(QDialog):
                 if colour_index_left == colour_index_right:
                     if colour_index_left == 45:
                         cell_item.setBackground(QColor(self.pink[0], self.pink[1], self.pink[2]))
-                        self.numberOfPT[col-1] += 1
+                        if cell_item.text() != 'L':
+                            self.numberOfPT[col-1] += 1
                     elif colour_index_left == 43:
                         cell_item.setBackground(QColor(self.yellow[0], self.yellow[1], self.yellow[2]))
                         self.numberOfCE[col-1] += 1
