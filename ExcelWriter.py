@@ -175,6 +175,8 @@ class ExcelWriter:
                         else:
                             self.open_shifts.append(new_employee_shift)
 
+                    temp_count += 1
+
         self.all_shifts = [self.open_shifts, self.morning_shifts, self.mid_shifts, self.closing_shifts, self.half_shifts]
         self.new_book.save(self.save_file_name)
 
@@ -419,7 +421,7 @@ class ExcelWriter:
             elif (self.row_half_counts[row][0] - self.row_half_counts[row][1]) > 1:
                 oversized_distribution_rows_left.append(row)
 
-        '''
+
         # Go through and try and even out the overpopulated sides.
         for right_row in oversized_distribution_rows_right:
             for left_row in oversized_distribution_rows_left:
@@ -427,11 +429,13 @@ class ExcelWriter:
                 left_lunch = self.row_lunch_column[left_row]
                 if 0 <= left_lunch - right_lunch <= 4:
                     for cols in range(right_lunch+1, right_lunch+5):
-                        if self.shouldPlaceCe(right_row, cols) and self.reference_matrix[left_row][cols] == 'yellow':
-                            excel_col = 2 * col + 5
+
+                        if cols <= len(self.reference_matrix[right_row])-1 and self.shouldPlaceCe(right_row, cols)\
+                                and self.reference_matrix[left_row][cols] == 'yellow':
+                            excel_col = 2 * cols + 5
                             self.setPink(left_row+2, excel_col, True)
                             self.setYellow(right_row+2, excel_col)
-        '''
+
         self.new_book.save(self.save_file_name)
         print("Ending coloring cells")
 
@@ -508,22 +512,27 @@ class ExcelWriter:
     def shouldPlaceCe(self, row, col):
         #Create random variable that decides if there should be two hours in a row.
         answer = True
-        if self.reference_matrix[row][col] == 'yellow':
-            answer = False
-        if self.reference_matrix[row][col] == 'top_lunch' or self.reference_matrix[row][col] == 'bottom_lunch':
-            answer = False
-        if self.reference_matrix[row][col] == 'gray':
-            answer = False
-            '''
-        if self.reference_matrix[row][-1] > 2:
-            answer = False
-            '''
-        if self.reference_matrix[row][col-1] == 'yellow' and self.reference_matrix[row][col-2] == 'yellow':
-            answer = False
-        if self.reference_matrix[row][col+1] == 'yellow' and self.reference_matrix[row][col+2] == 'yellow':
-            answer = False
-        if self.reference_matrix[row][col-1] == 'yellow' and self.reference_matrix[row][col+1] == 'yellow':
-            answer = False
+        if col <= len(self.reference_matrix[row]) - 1:
+            if self.reference_matrix[row][col] == 'yellow':
+                answer = False
+            if self.reference_matrix[row][col] == 'top_lunch' or self.reference_matrix[row][col] == 'bottom_lunch':
+                answer = False
+            if self.reference_matrix[row][col] == 'gray':
+                answer = False
+                '''
+            if self.reference_matrix[row][-1] > 2:
+                answer = False
+                '''
+        try:
+            if self.reference_matrix[row][col-1] == 'yellow' and self.reference_matrix[row][col-2] == 'yellow':
+                answer = False
+            if self.reference_matrix[row][col+1] == 'yellow' and self.reference_matrix[row][col+2] == 'yellow':
+                answer = False
+            if self.reference_matrix[row][col-1] == 'yellow' and self.reference_matrix[row][col+1] == 'yellow':
+                answer = False
+
+        except:
+            answer = True
         return answer
 
     # Method checks to see if there are four product rows in a row to place a new CE row.
