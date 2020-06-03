@@ -164,7 +164,7 @@ class ExcelWriter:
                     if end_time - start_time < 6:
                         new_employee_shift = EmployeeShift(index, -1, start_time, end_time)
                         self.half_shifts.append(new_employee_shift)
-                    elif end_time - start_time <= 8:
+                    elif end_time - start_time <= 10:
                         new_employee_shift = EmployeeShift(index, int(lunch_index), start_time, end_time)
                         if start_time >= 14.5:
                             self.closing_shifts.append(new_employee_shift)
@@ -419,6 +419,7 @@ class ExcelWriter:
             elif (self.row_half_counts[row][0] - self.row_half_counts[row][1]) > 1:
                 oversized_distribution_rows_left.append(row)
 
+        '''
         # Go through and try and even out the overpopulated sides.
         for right_row in oversized_distribution_rows_right:
             for left_row in oversized_distribution_rows_left:
@@ -430,7 +431,7 @@ class ExcelWriter:
                             excel_col = 2 * col + 5
                             self.setPink(left_row+2, excel_col, True)
                             self.setYellow(right_row+2, excel_col)
-
+        '''
         self.new_book.save(self.save_file_name)
         print("Ending coloring cells")
 

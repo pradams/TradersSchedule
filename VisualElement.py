@@ -5,6 +5,7 @@ import datetime
 import xlrd
 import xlwt
 from xlutils.copy import copy
+import os
 
 class VisualTable(QDialog):
 
@@ -236,14 +237,15 @@ class VisualTable(QDialog):
         # Update the excel file with all updated cells in editor.
         for index in self.updatedRows:
             cell_color = self.tableWidget.item(index[0], index[1]).background().color().getRgb()
-
+            print("Cell color: ", cell_color)
+            print("Index: ", index)
             if cell_color == self.pink:
+                print("Setting Pink")
                 self.setPink(index, write_sheet)
             elif cell_color == self.green:
                 self.setGreen(index, write_sheet)
             else:
                 self.setYellow(index, write_sheet)
-
 
         # Print CE count numbers in excel file.
         style_main_label = xlwt.easyxf('pattern: pattern solid, fore_colour white; borders: left thin, right thin, top thin, bottom thin')
@@ -251,12 +253,14 @@ class VisualTable(QDialog):
         style_left = xlwt.easyxf('pattern: pattern solid, fore_colour white; borders: left thin, top thin, bottom thin; align: horiz right')
         style_right = xlwt.easyxf('pattern: pattern solid, fore_colour white; borders: right thin, top thin, bottom thin; align: horiz right')
         ce_list_index = 0
+        
         for col in range(5, 30, 2):
             write_sheet.col(col).width = self.col_width
             write_sheet.write(self.numEmployees[0]+3, col, self.numberOfCE[ce_list_index], style_left)
             write_sheet.write(self.numEmployees[0]+3, col+1, '', style_right)
             ce_list_index += 1
 
+        print("Saving to File")
     # Method helps distinguish between single and double clicks
     def clickedCell(self, cell):
         self.numberOfClicks += 1
@@ -391,8 +395,10 @@ class VisualTable(QDialog):
     def save_button_clicked(self):
         write_sheet = self.write_schedule.get_sheet(self.day_index+3)
         self.saveToExcel(write_sheet)
+        self.read_schedule.release_resources()
+        os.remove(self.save_file_name)
         self.write_schedule.save(self.save_file_name)
-        print("Button Pressed")
+        print("Just Wrote")
         self.close()
 
     # Sets up right click menu.
