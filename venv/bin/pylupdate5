@@ -1,4 +1,4 @@
-#!/Users/Patrick/Desktop/TradersSchedule/venv/bin/python
+#!/Users/patrickadams/PycharmProjects/TradersSchedule/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys
