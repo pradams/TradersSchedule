@@ -18,8 +18,8 @@ class MainIntroWindow(QDialog):
         self.day_of_week = datetime.datetime.today().weekday()
 
         ####################### Defaults used for testing #####################################
-        self.default_open_path = "/Users/Patrick/Desktop/TradersSchedule/test.xls"
-        self.default_save_path = "/Users/Patrick/Desktop/TradersSchedule/new_schedule.xls"
+        self.default_open_path = "Choose Schedule(.xls file) To Edit"
+        self.default_save_path = "Create Filled Out Schedule Location"
         self.open_file_found = False
         self.save_file_found = False
         self.day_index = 0
@@ -43,6 +43,7 @@ class MainIntroWindow(QDialog):
         self.open_file_button = QPushButton(self.widget)
         self.open_file_button.setObjectName("open_file_button")
         self.open_file_button.clicked.connect(self.handleOpenFileButtonClick)
+        self.open_file_button.setFocusPolicy(Qt.NoFocus)
         self.horizontalLayout_3.addWidget(self.open_file_button)
         self.lineEdit = QLineEdit(self.widget)
         self.lineEdit.setObjectName("lineEdit")
@@ -53,6 +54,7 @@ class MainIntroWindow(QDialog):
         self.set_save_file_button = QPushButton(self.widget)
         self.set_save_file_button.setObjectName("set_save_file_button")
         self.set_save_file_button.clicked.connect(self.handleSaveFileButtonClick)
+        self.set_save_file_button.setFocusPolicy(Qt.NoFocus)
         self.horizontalLayout_4.addWidget(self.set_save_file_button)
         self.lineEdit_2 = QLineEdit(self.widget)
         self.lineEdit_2.setObjectName("lineEdit_2")
@@ -63,6 +65,7 @@ class MainIntroWindow(QDialog):
         self.run_program_button.setObjectName("run_program_button")
         self.run_program_button.clicked.connect(self.runProgram)
         self.run_program_button.setDisabled(True)
+        self.run_program_button.setFocusPolicy(Qt.NoFocus)
         self.widget1 = QWidget(MainWindow)
         self.widget1.setGeometry(QRect(200, 110, 210, 26))
         self.widget1.setObjectName("widget1")
@@ -89,7 +92,7 @@ class MainIntroWindow(QDialog):
 
         self.horizontalLayout_5.addWidget(self.day_selector)
         self.widget2 = QWidget(MainWindow)
-        self.widget2.setGeometry(QRect(170, 150, 259, 242))
+        self.widget2.setGeometry(QRect(125, 150, 340, 242))
         self.widget2.setObjectName("widget2")
         self.verticalLayout_6 = QVBoxLayout(self.widget2)
         self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
@@ -550,11 +553,11 @@ class MainIntroWindow(QDialog):
         # Set up default file parameters
         self.original_filename = self.default_open_path
         self.lineEdit.setText(self.original_filename)
-        if self.original_filename:
+        if self.original_filename != self.default_open_path:
             self.open_file_found = True
         self.new_save_filename = self.default_save_path
         self.lineEdit_2.setText(self.new_save_filename)
-        if self.new_save_filename:
+        if self.new_save_filename != self.default_save_path:
             self.save_file_found = True
 
         if self.open_file_found and self.save_file_found:

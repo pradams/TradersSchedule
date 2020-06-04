@@ -422,6 +422,7 @@ class ExcelWriter:
                 oversized_distribution_rows_left.append(row+self.last_manager_row-1)
 
 
+
         # Go through and try and even out the overpopulated sides.
         for right_row in oversized_distribution_rows_right:
             for left_row in oversized_distribution_rows_left:
