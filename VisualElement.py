@@ -411,7 +411,6 @@ class VisualTable(QDialog):
         rightLunchAction = QAction('Change Lunch To Bottom of Hour', self)
         rightLunchAction.triggered.connect(lambda: self.changeToBottomHourLunch(event))
 
-        print("New: ", event)
         self.cursor_pos = QCursor.pos()
         self.menu.addAction(leftLunchAction)
         self.menu.addAction(rightLunchAction)

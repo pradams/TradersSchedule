@@ -18,8 +18,8 @@ class MainIntroWindow(QDialog):
         self.day_of_week = datetime.datetime.today().weekday()
 
         ####################### Defaults used for testing #####################################
-        self.default_open_path = "Choose Schedule(.xls file) To Edit"
-        self.default_save_path = "Create Filled Out Schedule Location"
+        self.default_open_path = "/Users/patrickadams/PycharmProjects/TradersSchedule/test.xls"
+        self.default_save_path = "/Users/patrickadams/PycharmProjects/TradersSchedule/new_schedule.xls"
         self.open_file_found = False
         self.save_file_found = False
         self.day_index = 0
